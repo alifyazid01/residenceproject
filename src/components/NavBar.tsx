@@ -44,20 +44,33 @@ export default function NavBar() {
       
       <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
         {session ? (
-          // What to show if the user IS logged in
           <>
             <Link to="/" style={{ color: '#cbd5e1', textDecoration: 'none', fontWeight: '500' }}>
               Dashboard
             </Link>
             
-            {/* The new Directory Link! */}
             <Link to="/residents" style={{ color: '#cbd5e1', textDecoration: 'none', fontWeight: '500' }}>
-              Directory
+              Residents
             </Link>
 
-            {/* New Bills link */}
+            <Link to="/visitors" style={{ color: '#cbd5e1', textDecoration: 'none', fontWeight: '500' }}>
+              Guests
+            </Link>
+
             <Link to="/bills" style={{ color: '#cbd5e1', textDecoration: 'none', fontWeight: '500' }}>
               Billing
+            </Link>
+
+            <Link to="/facilities" style={{ color: '#cbd5e1', textDecoration: 'none', fontWeight: '500' }}>
+              Facilities
+            </Link>
+
+            <Link to="/parking" style={{ color: '#cbd5e1', textDecoration: 'none', fontWeight: '500' }}>
+              Parking
+            </Link>
+
+            <Link to="/contacts" style={{ color: '#cbd5e1', textDecoration: 'none', fontWeight: '500' }}>
+              Contacts
             </Link>
 
             <button 

@@ -2,203 +2,104 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const [parkingData, setParkingData] = useState<any[]>([]);
-  const [stats, setStats] = useState({ residents: 0, parking: 0, bills: 0 });
-  
-  // New state variables for the pop-up form
-  const [showForm, setShowForm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    resident_name: '',
-    vehicle_plate: '',
-    spot_number: ''
+  const [stats, setStats] = useState({
+    residents: 0,
+    parkingBays: 0,
+    pendingBills: 0,
+    pendingGuests: 0
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
+    fetchDashboardStats();
   }, []);
 
-  const fetchData = async () => {
+  const fetchDashboardStats = async () => {
     try {
-      // 1. Fetch parking data
-      const { data: parking, error: parkingError } = await supabase.from('parking').select('*');
-      if (parkingError) throw parkingError;
+      // 1. Count Residents
+      const { count: residentCount } = await supabase
+        .from('residents')
+        .select('*', { count: 'exact', head: true });
 
-      // 2. Fetch residents data
-      const { data: residents, error: residentsError } = await supabase.from('residents').select('*');
-      if (residentsError) throw residentsError;
+      // 2. Count Registered Vehicles in Parking Bays
+      const { count: parkingCount } = await supabase
+        .from('parking_bays')
+        .select('*', { count: 'exact', head: true })
+        .not('vehicle_plate', 'is', null);
 
-      // 3. Fetch only the pending bills
-      const { data: pendingBills, error: billsError } = await supabase
+      // 3. Count Pending Bills
+      const { count: billsCount } = await supabase
         .from('bills')
-        .select('*')
+        .select('*', { count: 'exact', head: true })
         .eq('status', 'Pending');
-      if (billsError) throw billsError;
 
-      if (parking) {
-        setParkingData(parking);
-      }
+      // 4. Count Pending Guest Invites
+      const { count: guestsCount } = await supabase
+        .from('visitors')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Pending');
 
-      // Update all three stats cards!
       setStats({
-        residents: residents ? residents.length : 0,
-        parking: parking ? parking.length : 0,
-        bills: pendingBills ? pendingBills.length : 0 // Now pulling real data!
+        residents: residentCount || 0,
+        parkingBays: parkingCount || 0,
+        pendingBills: billsCount || 0,
+        pendingGuests: guestsCount || 0
       });
-
     } catch (error: any) {
-      console.error("Error fetching data:", error.message);
+      console.error("Error fetching stats:", error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to handle submitting the new form
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const { data, error } = await supabase
-        .from('parking')
-        .insert([formData])
-        .select();
-
-      if (error) throw error;
-
-      if (data) {
-        // Add the new row to the table instantly without refreshing
-        setParkingData([...parkingData, data[0]]);
-        setStats(prev => ({ ...prev, parking: prev.parking + 1 }));
-        
-        // Close the form and reset it
-        setShowForm(false);
-        setFormData({ resident_name: '', vehicle_plate: '', spot_number: '' });
-      }
-    } catch (error: any) {
-      alert("Error adding record: " + error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'sans-serif' }}>Loading system data...</div>;
+    return <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'sans-serif' }}>Loading system overview...</div>;
   }
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
-      <h1 style={{ color: '#1e293b', marginBottom: '30px' }}>System Overview</h1>
+    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
+      <h1 style={{ color: '#1e293b', marginBottom: '30px', textAlign: 'center' }}>System Overview</h1>
       
-      {/* Statistics Cards Grid */}
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 250px', background: '#f8fafc', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-          <h3 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '16px' }}>Registered Residents</h3>
-          <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#3b82f6' }}>{stats.residents}</p>
-        </div>
-        <div style={{ flex: '1 1 250px', background: '#f8fafc', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-          <h3 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '16px' }}>Active Parking Spaces</h3>
-          <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#10b981' }}>{stats.parking}</p>
-        </div>
-        <div style={{ flex: '1 1 250px', background: '#f8fafc', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-          <h3 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '16px' }}>Pending Bills</h3>
-          <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#f59e0b' }}>{stats.bills}</p>
-        </div>
-      </div>
-
-      {/* Main Data Table Section */}
-      <div style={{ background: 'white', padding: '30px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: '#1e293b' }}>Parking Records</h2>
-          <button 
-            onClick={() => setShowForm(true)}
-            style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-            + Add New
-          </button>
-        </div>
+      {/* 4-Column Responsive Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+        gap: '20px' 
+      }}>
         
-        {parkingData.length > 0 ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ background: '#f1f5f9', color: '#475569' }}>
-                <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>ID</th>
-                <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Resident Name</th>
-                <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Vehicle Plate</th>
-                <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Spot Number</th>
-              </tr>
-            </thead>
-            <tbody>
-              {parkingData.map((spot, index) => (
-                <tr key={index} style={{ borderBottom: '1px solid #e2e8f0', background: index % 2 === 0 ? 'white' : '#f8fafc' }}>
-                  <td style={{ padding: '12px', color: '#64748b' }}>{spot.id}</td>
-                  <td style={{ padding: '12px', fontWeight: '500' }}>{spot.resident_name}</td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{ background: '#f1f5f9', padding: '4px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', letterSpacing: '1px', fontFamily: 'monospace' }}>
-                      {spot.vehicle_plate}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{ background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
-                      {spot.spot_number}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', border: '2px dashed #cbd5e1', borderRadius: '8px' }}>
-            No parking data found.
-          </div>
-        )}
-      </div>
-
-      {/* The Pop-up Modal Form */}
-      {showForm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div style={{ background: 'white', padding: '30px', borderRadius: '10px', width: '100%', maxWidth: '400px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ marginTop: 0, marginBottom: '20px' }}>Register New Vehicle</h2>
-            
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <input 
-                type="text" 
-                placeholder="Resident Name" 
-                value={formData.resident_name}
-                onChange={(e) => setFormData({...formData, resident_name: e.target.value})}
-                required
-                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <input 
-                type="text" 
-                placeholder="Vehicle Plate (e.g. JWA 1234)" 
-                value={formData.vehicle_plate}
-                onChange={(e) => setFormData({...formData, vehicle_plate: e.target.value})}
-                required
-                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <input 
-                type="text" 
-                placeholder="Spot Number (e.g. D-14)" 
-                value={formData.spot_number}
-                onChange={(e) => setFormData({...formData, spot_number: e.target.value})}
-                required
-                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button type="button" onClick={() => setShowForm(false)} style={{ flex: 1, padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSubmitting} style={{ flex: 1, padding: '10px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                  {isSubmitting ? 'Saving...' : 'Save Record'}
-                </button>
-              </div>
-            </form>
-          </div>
+        {/* Card 1: Residents */}
+        <div style={{ background: 'white', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+          <h3 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '15px' }}>Registered Residents</h3>
+          <p style={{ margin: 0, color: '#3b82f6', fontSize: '32px', fontWeight: 'bold' }}>
+            {stats.residents}
+          </p>
         </div>
-      )}
-      
+
+        {/* Card 2: Parking */}
+        <div style={{ background: 'white', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+          <h3 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '15px' }}>Active Vehicles</h3>
+          <p style={{ margin: 0, color: '#10b981', fontSize: '32px', fontWeight: 'bold' }}>
+            {stats.parkingBays}
+          </p>
+        </div>
+
+        {/* Card 3: Bills */}
+        <div style={{ background: 'white', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+          <h3 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '15px' }}>Pending Bills</h3>
+          <p style={{ margin: 0, color: '#f59e0b', fontSize: '32px', fontWeight: 'bold' }}>
+            {stats.pendingBills}
+          </p>
+        </div>
+
+        {/* Card 4: Guests */}
+        <div style={{ background: 'white', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+          <h3 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '15px' }}>Pending Guests</h3>
+          <p style={{ margin: 0, color: '#8b5cf6', fontSize: '32px', fontWeight: 'bold' }}>
+            {stats.pendingGuests}
+          </p>
+        </div>
+
+      </div>
     </div>
   );
 }

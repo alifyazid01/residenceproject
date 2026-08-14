@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function Bills() {
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,47 @@ export default function Bills() {
     } catch (error: any) {
       alert("Error updating transaction: " + error.message);
     }
+  };
+
+  // --- PDF INVOICE / RECEIPT GENERATION ---
+  const generateInvoicePDF = (bill: any) => {
+    const doc = new jsPDF();
+    
+    // Header Branding
+    doc.setFontSize(20);
+    doc.setTextColor(30, 41, 59);
+    doc.text(bill.status === 'Paid' ? "OFFICIAL RECEIPT" : "TAX INVOICE", 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Document Reference: #INV-${bill.id.toString().padStart(5, '0')}`, 14, 30);
+    doc.text(`Date Issued: ${new Date().toLocaleDateString()}`, 14, 36);
+
+    // Bill Details Table
+    autoTable(doc, {
+      startY: 46,
+      head: [['Resident / Payer', 'Description', 'Payment Status', 'Total Amount']],
+      body: [
+        [
+          bill.resident_name || 'N/A',
+          bill.description,
+          bill.status,
+          bill.amount.toString().startsWith('RM') ? bill.amount : `RM ${bill.amount}`
+        ]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [37, 99, 235], fontStyle: 'bold' },
+      styles: { cellPadding: 6, fontSize: 10 }
+    });
+
+    // Save PDF
+    const filename = `${bill.status === 'Paid' ? 'Receipt' : 'Invoice'}_${(bill.resident_name || 'Resident').replace(/\s+/g, '_')}_Bill${bill.id}.pdf`;
+    doc.save(filename);
+  };
+
+  // --- FPX PAYMENT INITIATION ---
+  const handleFPXPayment = (bill: any) => {
+    alert(`Initiating FPX Gateway...\n\nResident: ${bill.resident_name}\nAmount: ${bill.amount}\n\nRedirecting to banking gateway...`);
   };
 
   // Function to handle issuing a new bill
@@ -97,7 +140,7 @@ export default function Bills() {
               <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Description</th>
               <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Amount</th>
               <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Status</th>
-              <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Action</th>
+              <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -116,15 +159,36 @@ export default function Bills() {
                   </span>
                 </td>
                 <td style={{ padding: '12px', textAlign: 'right' }}>
-                  {/* The missing Mark as Paid button is safely back! */}
-                  {bill.status === 'Pending' && (
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    {/* Invoice Download Button */}
                     <button 
-                      onClick={() => markAsPaid(bill.id)}
-                      style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                      onClick={() => generateInvoicePDF(bill)}
+                      style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                      title="Download PDF"
                     >
-                      ✓ Mark Paid
+                      📄 Invoice
                     </button>
-                  )}
+
+                    {/* Pay via FPX Button */}
+                    {bill.status === 'Pending' && (
+                      <button 
+                        onClick={() => handleFPXPayment(bill)}
+                        style={{ background: '#2563eb', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                      >
+                        💳 Pay FPX
+                      </button>
+                    )}
+
+                    {/* Admin Mark Paid Button */}
+                    {bill.status === 'Pending' && (
+                      <button 
+                        onClick={() => markAsPaid(bill.id)}
+                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                      >
+                        ✓ Mark Paid
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
