@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Facilities from './pages/facilities';
 import Parking from './pages/parking';
 import Contacts from './pages/contacts';
+import Register from './pages/register';
 
 function App() {
   return (
@@ -91,8 +92,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        
-        {/* Public Login Route */}
+        <Route path="/register" element={<Register />} />
+
         <Route path="/login" element={<Login />} /> 
       </Routes>
     </Router>
