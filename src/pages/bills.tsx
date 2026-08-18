@@ -55,7 +55,7 @@ export default function Bills() {
     setLoading(false);
   };
 
-// --- ADMIN FUNCTION: ISSUE BILL(S) ---
+  // --- ADMIN FUNCTION: ISSUE BILL(S) ---
   const handleIssueBill = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -129,6 +129,21 @@ export default function Bills() {
       alert("Error issuing bill: " + error.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // --- ADMIN FUNCTION: DELETE BILL ---
+  const handleDeleteBill = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this bill? This action cannot be undone.")) return;
+
+    try {
+      const { error } = await supabase.from('bills').delete().eq('id', id);
+      if (error) throw error;
+
+      // Instantly update the screen by filtering out the deleted bill
+      setBills(bills.filter(b => b.id !== id));
+    } catch (error: any) {
+      alert("Error deleting bill: " + error.message);
     }
   };
 
@@ -301,22 +316,34 @@ export default function Bills() {
                   </td>
 
                   <td style={{ padding: '15px 12px', textAlign: 'right' }}>
-                    {bill.status === 'Pending' && role === 'user' ? (
-                      <button 
-                        onClick={() => { setSelectedBill(bill); setPayingAll(false); setShowPaymentModal(true); }}
-                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-                      >
+                    
+                    {/* User "Pay Now" Button */}
+                    {bill.status === 'Pending' && role === 'user' && (
+                      <button onClick={() => { setSelectedBill(bill); setPayingAll(false); setShowPaymentModal(true); }} style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>
                         Pay Now
                       </button>
-                    ) : bill.status === 'Paid' ? (
-                      <button 
-                        onClick={() => { setSelectedBill(bill); setShowReceiptModal(true); }}
-                        style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-                      >
+                    )}
+
+                    {/* Shared "E-Receipt" Button */}
+                    {bill.status === 'Paid' && (
+                      <button onClick={() => { setSelectedBill(bill); setShowReceiptModal(true); }} style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', marginRight: '5px' }}>
                         E-Receipt
                       </button>
-                    ) : (
-                      <span style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>Awaiting User</span>
+                    )}
+
+                    {/* Admin "Awaiting User" Text */}
+                    {bill.status === 'Pending' && role === 'admin' && (
+                      <span style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic', marginRight: '10px' }}>Awaiting User</span>
+                    )}
+
+                    {/* Admin "Delete" Button */}
+                    {role === 'admin' && (
+                      <button 
+                        onClick={() => handleDeleteBill(bill.id)} 
+                        style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                      >
+                        Delete
+                      </button>
                     )}
                   </td>
                 </tr>
