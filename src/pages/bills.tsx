@@ -55,65 +55,82 @@ export default function Bills() {
     setLoading(false);
   };
 
-  // --- ADMIN FUNCTION: ISSUE BILL(S) ---
-    const handleIssueBill = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
+// --- ADMIN FUNCTION: ISSUE BILL(S) ---
+  const handleIssueBill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-      try {
-        if (formData.resident_email === 'ALL') {
-          // BULK INSERT: Issue to everyone
-          if (residents.length === 0) throw new Error("No residents found to issue bills to.");
-          
-          const billsToInsert = residents.map(r => ({
-            unit_number: r.unit_number || 'N/A',
-            // Added fallback logic below to check for full_name or default to 'Resident' if null
-            resident_name: r.name || r.full_name || 'Resident', 
-            resident_email: r.email,
+    try {
+      if (formData.resident_email === 'ALL') {
+        // BULK INSERT: Issue to everyone
+        if (!residents || residents.length === 0) {
+          throw new Error("No residents found in the directory. Please add residents first.");
+        }
+        
+        // Map through and forcefully convert EVERYTHING to a string to prevent nulls
+        const billsToInsert = residents.map(r => {
+           const safeUnit = r.unit_number ? String(r.unit_number) : 'N/A';
+           const safeName = r.name ? String(r.name) : (r.full_name ? String(r.full_name) : 'Resident');
+           const safeEmail = r.email ? String(r.email) : 'no-email@error.com';
+
+           return {
+             unit_number: safeUnit,
+             resident_name: safeName,
+             resident_email: safeEmail,
+             description: formData.description,
+             amount: parseFloat(formData.amount),
+             status: 'Pending'
+           };
+        });
+
+        // This will print the data to your browser console so we can debug it if it fails!
+        console.log("PAYLOAD TO SEND:", billsToInsert); 
+
+        const { data, error } = await supabase.from('bills').insert(billsToInsert).select();
+        
+        if (error) {
+            console.error("Supabase Error Details:", error);
+            throw error;
+        }
+        
+        if (data) {
+          const updatedBills = [...data, ...bills].sort((a,b) => new Date(b.issued_at).getTime() - new Date(a.issued_at).getTime());
+          setBills(updatedBills);
+        }
+        alert(`Successfully issued bills to all ${residents.length} residents!`);
+        
+      } else {
+        // SINGLE INSERT: Issue to one resident
+        const resident = residents.find(r => r.email === formData.resident_email);
+        if (!resident) throw new Error("Please select a valid resident.");
+
+        const safeUnit = resident.unit_number ? String(resident.unit_number) : 'N/A';
+        const safeName = resident.name ? String(resident.name) : (resident.full_name ? String(resident.full_name) : 'Resident');
+        const safeEmail = resident.email ? String(resident.email) : 'no-email@error.com';
+
+        const singleBill = {
+            unit_number: safeUnit,
+            resident_name: safeName,
+            resident_email: safeEmail,
             description: formData.description,
             amount: parseFloat(formData.amount),
             status: 'Pending'
-          }));
+        };
 
-          const { data, error } = await supabase.from('bills').insert(billsToInsert).select();
-          if (error) throw error;
-          
-          if (data) {
-            const updatedBills = [...data, ...bills].sort((a,b) => new Date(b.issued_at).getTime() - new Date(a.issued_at).getTime());
-            setBills(updatedBills);
-          }
-          alert(`Successfully issued bills to all ${residents.length} residents!`);
-          
-        } else {
-          // SINGLE INSERT: Issue to one resident
-          const resident = residents.find(r => r.email === formData.resident_email);
-          if (!resident) throw new Error("Please select a valid resident.");
+        const { data, error } = await supabase.from('bills').insert([singleBill]).select();
 
-          const { data, error } = await supabase
-            .from('bills')
-            .insert([{
-              unit_number: resident.unit_number || 'N/A',
-              // Added fallback logic here too
-              resident_name: resident.name || resident.full_name || 'Resident', 
-              resident_email: resident.email,
-              description: formData.description,
-              amount: parseFloat(formData.amount),
-              status: 'Pending'
-            }])
-            .select();
-
-          if (error) throw error;
-          if (data) setBills([data[0], ...bills]);
-          alert("Bill issued successfully!");
-        }
-        
-        setFormData({ resident_email: '', description: '', amount: '' });
-      } catch (error: any) {
-        alert("Error issuing bill: " + error.message);
-      } finally {
-        setIsSubmitting(false);
+        if (error) throw error;
+        if (data) setBills([data[0], ...bills]);
+        alert("Bill issued successfully!");
       }
-    };
+      
+      setFormData({ resident_email: '', description: '', amount: '' });
+    } catch (error: any) {
+      alert("Error issuing bill: " + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // --- USER FUNCTION: PROCESS PAYMENT(S) ---
   const handlePayment = async (e: React.FormEvent) => {
