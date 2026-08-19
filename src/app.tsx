@@ -11,6 +11,8 @@ import Facilities from './pages/facilities';
 import Parking from './pages/parking';
 import Contacts from './pages/contacts';
 import Register from './pages/register';
+import ForgotPassword from './pages/forgot-password';
+import UpdatePassword from './pages/update-password';
 
 function App() {
   return (
@@ -95,6 +97,11 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         <Route path="/login" element={<Login />} /> 
+
+        <Route path="/forgot-password" element={<ForgotPassword />} /> 
+
+        <Route path="/update-password" element={<UpdatePassword />} />
+        
       </Routes>
     </Router>
   );

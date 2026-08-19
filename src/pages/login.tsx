@@ -66,6 +66,15 @@ export default function Login() {
       <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#64748b' }}>
         Don't have an account? <Link to="/register" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 'bold' }}>Register here</Link>
       </div>
+
+      <div style={{ textAlign: 'center', marginTop: '15px', fontSize: '14px' }}>
+        <Link to="/forgot-password" style={{ color: '#ef4444', textDecoration: 'none', fontWeight: 'bold' }}>Forgot Password?</Link>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '15px', fontSize: '14px', color: '#64748b', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+        Don't have an account? <Link to="/register" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 'bold' }}>Register here</Link>
+      </div>
+      
     </div>
   );
 } 
