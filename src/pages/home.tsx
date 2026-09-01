@@ -21,14 +21,14 @@ const adminApps = [
     { name: 'System Dashboard', icon: '📊', path: '/dashboard', color: '#f0f9ff', border: '#bae6fd' },
     { name: 'Issue Bills', icon: '💳', path: '/bills', color: '#fef2f2', border: '#fecaca' },
     { name: 'Manage Directory', icon: '📖', path: '/residents', color: '#f8fafc', border: '#e2e8f0' },
-    { name: 'Manage Guests', icon: '👥', path: '/visitors', color: '#fdf4ff', border: '#fbcfe8' },
+    { name: 'Manage Guests', icon: '👥', path: '/guests', color: '#fdf4ff', border: '#fbcfe8' },
     { name: 'Facilities', icon: '🎾', path: '/facilities', color: '#f0fdf4', border: '#bbf7d0' },
     { name: 'Parking', icon: '🚗', path: '/parking', color: '#fff7ed', border: '#fed7aa' }
 ];
 
   const userApps = [
     { name: 'Facilities', icon: '🎾', path: '/facilities', color: '#f0fdf4', border: '#bbf7d0' },
-    { name: 'Guests', icon: '👥', path: '/visitors', color: '#fdf4ff', border: '#fbcfe8' },
+    { name: 'Guests', icon: '👥', path: '/guests', color: '#fdf4ff', border: '#fbcfe8' },
     { name: 'Parking', icon: '🚗', path: '/parking', color: '#fff7ed', border: '#fed7aa' },
     { name: 'Billing', icon: '💳', path: '/bills', color: '#fef2f2', border: '#fecaca' },
     { name: 'Directory', icon: '📖', path: '/residents', color: '#f8fafc', border: '#e2e8f0' },

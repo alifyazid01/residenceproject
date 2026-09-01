@@ -4,9 +4,9 @@ import Dashboard from './pages/dashboard';
 import Login from './pages/login';
 import Residents from './pages/residents'; 
 import Bills from './pages/bills'; 
-import NavBar from './components/NavBar'; 
-import Visitors from './pages/visitors'; 
+import NavBar from './components/NavBar';  
 import ProtectedRoute from './components/ProtectedRoute';
+import Guests from './pages/guests';
 import Facilities from './pages/facilities';
 import Parking from './pages/parking';
 import Contacts from './pages/contacts';
@@ -60,19 +60,19 @@ function App() {
         /> 
 
         <Route 
-          path="/visitors" 
-          element={
-            <ProtectedRoute>
-              <Visitors />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
           path="/facilities" 
           element={
             <ProtectedRoute>
               <Facilities />
+            </ProtectedRoute>
+          } 
+        />
+
+      <Route 
+          path="/guests" 
+          element={
+            <ProtectedRoute>
+              <Guests />
             </ProtectedRoute>
           } 
         />
