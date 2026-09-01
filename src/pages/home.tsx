@@ -17,72 +17,58 @@ export default function Home() {
     fetchUserRole();
   }, []);
 
-const adminApps = [
-    { name: 'System Dashboard', icon: '📊', path: '/dashboard', color: '#f0f9ff', border: '#bae6fd' },
-    { name: 'Issue Bills', icon: '💳', path: '/bills', color: '#fef2f2', border: '#fecaca' },
-    { name: 'Manage Directory', icon: '📖', path: '/residents', color: '#f8fafc', border: '#e2e8f0' },
-    { name: 'Manage Guests', icon: '👥', path: '/guests', color: '#fdf4ff', border: '#fbcfe8' },
-    { name: 'Facilities', icon: '🎾', path: '/facilities', color: '#f0fdf4', border: '#bbf7d0' },
-    { name: 'Parking', icon: '🚗', path: '/parking', color: '#fff7ed', border: '#fed7aa' }
-];
+  // Updated array with Tailwind color classes instead of hex codes
+  const adminApps = [
+    { name: 'System Dashboard', icon: '📊', path: '/dashboard', theme: 'bg-sky-50 border-sky-200 hover:bg-sky-100' },
+    { name: 'Issue Bills', icon: '💳', path: '/bills', theme: 'bg-rose-50 border-rose-200 hover:bg-rose-100' },
+    { name: 'Manage Directory', icon: '📖', path: '/residents', theme: 'bg-slate-50 border-slate-200 hover:bg-slate-100' },
+    { name: 'Manage Guests', icon: '👥', path: '/guests', theme: 'bg-fuchsia-50 border-fuchsia-200 hover:bg-fuchsia-100' },
+    { name: 'Facilities', icon: '🎾', path: '/facilities', theme: 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
+    { name: 'Parking', icon: '🚗', path: '/parking', theme: 'bg-orange-50 border-orange-200 hover:bg-orange-100' }
+  ];
 
   const userApps = [
-    { name: 'Facilities', icon: '🎾', path: '/facilities', color: '#f0fdf4', border: '#bbf7d0' },
-    { name: 'Guests', icon: '👥', path: '/guests', color: '#fdf4ff', border: '#fbcfe8' },
-    { name: 'Parking', icon: '🚗', path: '/parking', color: '#fff7ed', border: '#fed7aa' },
-    { name: 'Billing', icon: '💳', path: '/bills', color: '#fef2f2', border: '#fecaca' },
-    { name: 'Directory', icon: '📖', path: '/residents', color: '#f8fafc', border: '#e2e8f0' },
-    { name: 'Contacts', icon: '📞', path: '/contacts', color: '#fffbeb', border: '#fef08a' },
+    { name: 'Facilities', icon: '🎾', path: '/facilities', theme: 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
+    { name: 'Guests', icon: '👥', path: '/guests', theme: 'bg-fuchsia-50 border-fuchsia-200 hover:bg-fuchsia-100' },
+    { name: 'Parking', icon: '🚗', path: '/parking', theme: 'bg-orange-50 border-orange-200 hover:bg-orange-100' },
+    { name: 'Billing', icon: '💳', path: '/bills', theme: 'bg-rose-50 border-rose-200 hover:bg-rose-100' },
+    { name: 'Directory', icon: '📖', path: '/residents', theme: 'bg-slate-50 border-slate-200 hover:bg-slate-100' },
+    { name: 'Contacts', icon: '📞', path: '/contacts', theme: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100' },
   ];
 
   if (loading) {
-    return <div style={{ padding: '60px', textAlign: 'center', fontFamily: 'sans-serif', color: '#64748b' }}>Loading your portal...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-slate-500 text-lg font-medium animate-pulse">
+          Loading your portal...
+        </div>
+      </div>
+    );
   }
 
   // Determine which apps to show based on the fetched role
   const displayApps = role === 'admin' ? adminApps : userApps;
 
   return (
-    <div style={{ padding: '40px 20px', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-      <h1 style={{ color: '#1e293b', fontSize: '28px', marginBottom: '5px' }}>
+    <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">
         {role === 'admin' ? 'Management Portal' : 'Resident Portal'}
       </h1>
-      <p style={{ color: '#64748b', fontSize: '15px', marginBottom: '40px' }}>Tap an icon to launch the application</p>
+      <p className="text-slate-500 mb-10">
+        Tap an icon to launch the application
+      </p>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', 
-        gap: '20px',
-        padding: '10px',
-        justifyContent: 'center' // Centers the grid if there's only one app (like the Admin view)
-      }}>
+      {/* Tailwind CSS Grid: 2 columns on mobile, 3 columns on larger screens */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
         {displayApps.map((app, index) => (
-          <Link key={index} to={app.path} style={{ textDecoration: 'none' }}>
-            <div style={{ 
-              background: app.color, 
-              border: `2px solid ${app.border}`,
-              borderRadius: '20px', 
-              padding: '25px 10px', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.05)', 
-              cursor: 'pointer', 
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              aspectRatio: '1 / 1' 
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.1)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.05)';
-            }}
-            >
-              <div style={{ fontSize: '42px', marginBottom: '12px' }}>{app.icon}</div>
-              <h3 style={{ color: '#0f172a', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>{app.name}</h3>
+          <Link key={index} to={app.path} className="block group outline-none">
+            <div className={`flex flex-col items-center justify-center p-6 aspect-square rounded-2xl border-2 transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-1 ${app.theme}`}>
+              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                {app.icon}
+              </div>
+              <h3 className="text-slate-900 font-bold text-sm sm:text-base tracking-wide">
+                {app.name}
+              </h3>
             </div>
           </Link>
         ))}

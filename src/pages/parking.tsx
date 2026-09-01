@@ -58,7 +58,7 @@ export default function Parking() {
             const { data, error } = await supabase
               .from('parking_bays')
               .select('*')
-              .eq('unit_number', unit) // Privacy lock: Only fetch bays for this unit
+              .eq('unit_number', unit) 
               .order('bay_number', { ascending: true });
 
             if (error) throw error;
@@ -77,7 +77,7 @@ export default function Parking() {
   const openUpdateForm = (bay: any) => {
     setActiveBay(bay);
     setFormData({
-      unit_number: bay.unit_number || '', // Now populates the unit number
+      unit_number: bay.unit_number || '', 
       resident_name: bay.resident_name || '',
       vehicle_plate: bay.vehicle_plate || '',
       vehicle_model: bay.vehicle_model || ''
@@ -110,7 +110,7 @@ export default function Parking() {
       const { data, error } = await supabase
         .from('parking_bays')
         .update({
-          unit_number: formData.unit_number.toUpperCase().trim(), // Updates the assigned unit
+          unit_number: formData.unit_number.toUpperCase().trim(),
           resident_name: formData.resident_name,
           vehicle_plate: formData.vehicle_plate,
           vehicle_model: formData.vehicle_model,
@@ -135,14 +135,19 @@ export default function Parking() {
   };
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'sans-serif' }}>Loading parking records...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="text-slate-500 font-medium animate-pulse">Loading parking records...</div>
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '30px' }}>
-        <h1 style={{ color: '#1e293b', margin: '0 0 6px 0' }}>Vehicle & Parking Management</h1>
-        <p style={{ color: '#64748b', margin: 0 }}>
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 mb-1">Vehicle & Parking Management</h1>
+        <p className="text-slate-500">
           {role === 'admin' 
             ? 'Master directory of all property parking allocations.' 
             : `Viewing registered vehicles for Unit ${currentUnit}`}
@@ -150,42 +155,43 @@ export default function Parking() {
       </div>
 
       {bays.length === 0 ? (
-        <div style={{ padding: '40px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0', textAlign: 'center', color: '#64748b' }}>
+        <div className="bg-white p-12 rounded-xl border border-slate-200 text-center text-slate-500">
           {role === 'admin' ? 'No parking bays found in the database.' : 'No parking bays have been assigned to your unit.'}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {bays.map((bay, index) => (
-            <div key={index} style={{ background: 'white', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div key={index} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
               
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                <div className="flex justify-between items-start mb-5">
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase' }}>Assigned To</span>
-                    <h3 style={{ margin: '0', color: '#0f172a', fontSize: '18px' }}>Unit {bay.unit_number}</h3>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned To</span>
+                    <h3 className="text-xl font-bold text-slate-900 mt-0.5">Unit {bay.unit_number}</h3>
                   </div>
-                  <div style={{ background: '#1e293b', color: 'white', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '16px', letterSpacing: '1px' }}>
+                  <div className="bg-slate-900 text-white px-3 py-1.5 rounded-lg font-bold text-sm tracking-wide shadow-sm">
                     {bay.bay_number}
                   </div>
                 </div>
                 
-                <div style={{ background: bay.vehicle_plate ? '#f8fafc' : '#fef2f2', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: `1px solid ${bay.vehicle_plate ? '#e2e8f0' : '#fca5a5'}` }}>
+                {/* Dynamic Vehicle Info Box */}
+                <div className={`p-4 rounded-xl mb-6 border ${bay.vehicle_plate ? 'bg-slate-50 border-slate-200' : 'bg-rose-50 border-rose-200'}`}>
                   {bay.vehicle_plate ? (
                     <>
-                      <p style={{ margin: '0 0 5px 0', color: '#3b82f6', fontWeight: 'bold', fontSize: '18px', letterSpacing: '1px' }}>
+                      <p className="text-lg font-extrabold text-blue-600 tracking-wide mb-1">
                         {bay.vehicle_plate}
                       </p>
-                      <p style={{ margin: '0 0 10px 0', color: '#475569', fontSize: '14px' }}>
+                      <p className="text-sm text-slate-600 mb-3 font-medium">
                         🚗 {bay.vehicle_model}
                       </p>
-                      <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>
-                        👤 Registered to: <strong>{bay.resident_name}</strong>
+                      <p className="text-xs text-slate-500 border-t border-slate-200 pt-3">
+                        👤 Registered to: <strong className="text-slate-700">{bay.resident_name}</strong>
                       </p>
                     </>
                   ) : (
-                    <div style={{ textAlign: 'center', color: '#ef4444', padding: '10px 0' }}>
-                      <p style={{ margin: 0, fontWeight: 'bold' }}>Empty Bay</p>
-                      <p style={{ margin: '5px 0 0 0', fontSize: '13px' }}>
+                    <div className="text-center py-3">
+                      <p className="font-bold text-rose-500">Empty Bay</p>
+                      <p className="text-xs text-rose-400 mt-1">
                         {role === 'admin' ? 'No vehicle registered' : 'Contact Management to register a vehicle'}
                       </p>
                     </div>
@@ -195,17 +201,19 @@ export default function Parking() {
 
               {/* ADMIN ONLY BUTTONS */}
               {role === 'admin' && (
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="flex gap-3">
                   <button 
                     onClick={() => openUpdateForm(bay)}
-                    style={{ flex: 2, padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    className="flex-[2] py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-sm shadow-sm"
+                  >
                     {bay.vehicle_plate ? 'Update Details' : 'Assign / Register'}
                   </button>
                   
                   {bay.vehicle_plate && (
                     <button 
                       onClick={() => handleClearBay(bay.id)}
-                      style={{ flex: 1, padding: '10px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                      className="flex-1 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                    >
                       Clear
                     </button>
                   )}
@@ -219,64 +227,64 @@ export default function Parking() {
 
       {/* Update Vehicle Modal Form (Admin Only) */}
       {showForm && role === 'admin' && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
-          <div style={{ background: 'white', padding: '30px', borderRadius: '10px', width: '100%', maxWidth: '400px' }}>
-            <h2 style={{ marginTop: 0, marginBottom: '5px' }}>Manage Bay {activeBay?.bay_number}</h2>
-            <p style={{ color: '#64748b', fontSize: '14px', marginTop: 0, marginBottom: '20px' }}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl">
+            <h2 className="text-2xl font-bold text-slate-900 mb-1">Manage Bay {activeBay?.bay_number}</h2>
+            <p className="text-slate-500 text-sm mb-6">
               Reassign unit ownership or update vehicle details.
             </p>
             
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '5px' }}>Assigned Unit</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Assigned Unit</label>
                 <input 
                   type="text" 
                   placeholder="e.g. B-05" 
                   value={formData.unit_number}
                   onChange={(e) => setFormData({...formData, unit_number: e.target.value})}
                   required
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', textTransform: 'uppercase', boxSizing: 'border-box' }}
+                  className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '5px' }}>License Plate (Optional)</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">License Plate (Optional)</label>
                 <input 
                   type="text" 
                   placeholder="e.g. JQM 1234" 
                   value={formData.vehicle_plate}
                   onChange={(e) => setFormData({...formData, vehicle_plate: e.target.value.toUpperCase()})}
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', textTransform: 'uppercase', boxSizing: 'border-box' }}
+                  className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '5px' }}>Vehicle Model (Optional)</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Vehicle Model (Optional)</label>
                 <input 
                   type="text" 
-                  placeholder="e.g. Honda Wave 125" 
+                  placeholder="e.g. MINI Countryman or Honda Wave 125" 
                   value={formData.vehicle_model}
                   onChange={(e) => setFormData({...formData, vehicle_model: e.target.value})}
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                  className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '5px' }}>Resident / Owner Name (Optional)</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Resident / Owner Name (Optional)</label>
                 <input 
                   type="text" 
                   placeholder="Owner Name" 
                   value={formData.resident_name}
                   onChange={(e) => setFormData({...formData, resident_name: e.target.value})}
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                  className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
               
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button type="button" onClick={() => setShowForm(false)} style={{ flex: 1, padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+              <div className="flex gap-3 mt-4">
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 p-3 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSubmitting} style={{ flex: 1, padding: '10px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <button type="submit" disabled={isSubmitting} className="flex-[2] p-3 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-600 transition-colors disabled:opacity-70">
                   {isSubmitting ? 'Saving...' : 'Save Updates'}
                 </button>
               </div>

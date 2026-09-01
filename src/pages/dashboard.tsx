@@ -33,7 +33,7 @@ export default function Dashboard() {
       const { count: billCount } = await supabase
         .from('bills')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'Pending'); // Adjust to match your exact bill status string
+        .eq('status', 'Pending');
 
       // 4. Count total property units
       const { count: unitCount } = await supabase
@@ -54,56 +54,74 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'sans-serif' }}>Loading Live Statistics...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="text-slate-500 font-medium animate-pulse">Loading Live Statistics...</div>
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '30px' }}>
-        <h1 style={{ color: '#1e293b', margin: '0 0 6px 0' }}>Admin Command Center</h1>
-        <p style={{ color: '#64748b', margin: 0 }}>Live overview of your residence system data.</p>
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 mb-1">Admin Command Center</h1>
+        <p className="text-slate-500">Live overview of your residence system data.</p>
       </div>
 
       {/* KPI STATS GRID */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         
         {/* Residents Card */}
-        <div style={{ background: 'white', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-          <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Residents</span>
-          <span style={{ fontSize: '36px', fontWeight: 'bold', color: '#0f172a', margin: '10px 0' }}>{stats.totalResidents}</span>
-          <Link to="/residents" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>View Directory →</Link>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Residents</span>
+          <span className="text-4xl font-extrabold text-slate-900 my-3">{stats.totalResidents}</span>
+          <Link to="/residents" className="text-sm font-semibold text-blue-600 hover:text-blue-700 mt-auto inline-flex items-center">
+            View Directory <span className="ml-1">→</span>
+          </Link>
         </div>
 
         {/* Units Card */}
-        <div style={{ background: 'white', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-          <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase' }}>Registered Units</span>
-          <span style={{ fontSize: '36px', fontWeight: 'bold', color: '#0f172a', margin: '10px 0' }}>{stats.totalUnits}</span>
-          <span style={{ color: '#94a3b8', fontSize: '13px' }}>Database capacity</span>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Registered Units</span>
+          <span className="text-4xl font-extrabold text-slate-900 my-3">{stats.totalUnits}</span>
+          <span className="text-sm text-slate-400 mt-auto">Database capacity</span>
         </div>
 
         {/* Visitors Card */}
-        <div style={{ background: 'white', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-          <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase' }}>Active/Pending Guests</span>
-          <span style={{ fontSize: '36px', fontWeight: 'bold', color: '#10b981', margin: '10px 0' }}>{stats.activeVisitors}</span>
-          <Link to="/guests" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>Manage Access →</Link>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active/Pending Guests</span>
+          <span className="text-4xl font-extrabold text-emerald-500 my-3">{stats.activeVisitors}</span>
+          <Link to="/guests" className="text-sm font-semibold text-blue-600 hover:text-blue-700 mt-auto inline-flex items-center">
+            Manage Access <span className="ml-1">→</span>
+          </Link>
         </div>
 
         {/* Bills Card */}
-        <div style={{ background: 'white', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-          <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase' }}>Pending Bills</span>
-          <span style={{ fontSize: '36px', fontWeight: 'bold', color: '#ef4444', margin: '10px 0' }}>{stats.pendingBills}</span>
-          <Link to="/bills" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>View Finances →</Link>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending Bills</span>
+          <span className="text-4xl font-extrabold text-rose-500 my-3">{stats.pendingBills}</span>
+          <Link to="/bills" className="text-sm font-semibold text-blue-600 hover:text-blue-700 mt-auto inline-flex items-center">
+            View Finances <span className="ml-1">→</span>
+          </Link>
         </div>
 
       </div>
 
       {/* QUICK ACTIONS SECTION */}
-      <div style={{ background: 'white', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ margin: '0 0 16px 0', color: '#0f172a' }}>System Modules</h3>
-        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-          <Link to="/facilities" style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '12px 20px', borderRadius: '8px', color: '#334155', textDecoration: 'none', fontWeight: 'bold' }}>🎾 Facilities</Link>
-          <Link to="/parking" style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '12px 20px', borderRadius: '8px', color: '#334155', textDecoration: 'none', fontWeight: 'bold' }}>🚗 Parking</Link>
-          <Link to="/contacts" style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '12px 20px', borderRadius: '8px', color: '#334155', textDecoration: 'none', fontWeight: 'bold' }}>📞 Contacts</Link>
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-900 mb-4">System Modules</h3>
+        <div className="flex flex-wrap gap-4">
+          <Link to="/facilities" className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center gap-2">
+            <span>🎾</span> Facilities
+          </Link>
+          <Link to="/parking" className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center gap-2">
+            <span>🚗</span> Parking
+          </Link>
+          <Link to="/contacts" className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center gap-2">
+            <span>📞</span> Contacts
+          </Link>
         </div>
       </div>
     </div>
