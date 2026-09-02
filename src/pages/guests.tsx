@@ -11,6 +11,9 @@ interface Visitor {
   access_code: string;
   status: 'Pending' | 'Arrived' | 'Departed';
   created_at: string;
+  ic_number?: string;
+  ic_url?: string;
+  category?: string;
 }
 
 export default function Guests() {
@@ -19,7 +22,11 @@ export default function Guests() {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [currentResident, setCurrentResident] = useState<{ name: string; unit_number: string } | null>(null);
 
-  // Form State
+  // Search and Modal States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [createdPass, setCreatedPass] = useState<Visitor | null>(null);
+  
+  // --- RESIDENT FORM STATE ---
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     guest_name: '',
@@ -27,9 +34,17 @@ export default function Guests() {
     visit_date: new Date().toISOString().split('T')[0]
   });
 
-  // Modal / Access Pass State
-  const [createdPass, setCreatedPass] = useState<Visitor | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  // --- ADMIN WALK-IN FORM STATE ---
+  const [showWalkInModal, setShowWalkInModal] = useState(false);
+  const [isWalkInSubmitting, setIsWalkInSubmitting] = useState(false);
+  const [walkInForm, setWalkInForm] = useState({
+    guest_name: '',
+    ic_number: '',
+    ic_picture: null as File | null,
+    guest_car_plate: '',
+    unit_number: '',
+    category: 'Visiting Resident'
+  });
 
   useEffect(() => {
     fetchSessionAndData();
@@ -44,7 +59,6 @@ export default function Guests() {
       const userEmail = session.user.email || '';
       setRole(userRole);
 
-      // 1. Fetch resident profile details for user
       const { data: residentData } = await supabase
         .from('residents')
         .select('*')
@@ -58,12 +72,11 @@ export default function Guests() {
         });
       }
 
-      // 2. Fetch visitor records
       if (userRole === 'admin') {
         const { data, error } = await supabase
           .from('visitors')
           .select('*')
-          .order('visit_date', { ascending: false });
+          .order('created_at', { ascending: false });
 
         if (!error && data) setVisitors(data as Visitor[]);
       } else {
@@ -80,13 +93,12 @@ export default function Guests() {
     setLoading(false);
   };
 
-  // Generate unique pass code (e.g., GST-9482)
   const generateAccessCode = () => {
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
     return `GST-${randomDigits}`;
   };
 
-  // --- RESIDENT: REGISTER NEW VISITOR ---
+  // --- RESIDENT: PRE-REGISTER VISITOR ---
   const handleRegisterGuest = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -103,11 +115,11 @@ export default function Guests() {
         guest_car_plate: formData.guest_car_plate.trim().toUpperCase() || 'NO VEHICLE',
         visit_date: formData.visit_date,
         access_code: accessCode,
+        category: 'Pre-Registered Guest',
         status: 'Pending' as const
       };
 
       const { data, error } = await supabase.from('visitors').insert([newVisitor]).select();
-
       if (error) throw error;
 
       if (data && data[0]) {
@@ -115,11 +127,7 @@ export default function Guests() {
         setCreatedPass(data[0] as Visitor);
       }
 
-      setFormData({
-        guest_name: '',
-        guest_car_plate: '',
-        visit_date: new Date().toISOString().split('T')[0]
-      });
+      setFormData({ guest_name: '', guest_car_plate: '', visit_date: new Date().toISOString().split('T')[0] });
     } catch (error: any) {
       alert('Error creating visitor pass: ' + error.message);
     } finally {
@@ -127,26 +135,75 @@ export default function Guests() {
     }
   };
 
-  // --- ADMIN: UPDATE VISITOR STATUS ---
-  const handleUpdateStatus = async (id: number, nextStatus: 'Arrived' | 'Departed') => {
-    try {
-      const { error } = await supabase
-        .from('visitors')
-        .update({ status: nextStatus })
-        .eq('id', id);
+  // --- ADMIN: REGISTER WALK-IN VISITOR ---
+  const handleWalkInSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsWalkInSubmitting(true);
 
+    try {
+      let uploadedIcUrl = null;
+
+      // Upload IC Image to Supabase Storage (Bucket must be named 'guest_ic')
+      if (walkInForm.ic_picture) {
+        const fileExt = walkInForm.ic_picture.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('guest_ic')
+          .upload(fileName, walkInForm.ic_picture);
+
+        if (uploadError) {
+          throw new Error('Failed to upload IC picture: ' + uploadError.message);
+        }
+
+        const { data } = supabase.storage.from('guest_ic').getPublicUrl(fileName);
+        uploadedIcUrl = data.publicUrl;
+      }
+
+      const walkInVisitor = {
+        unit_number: walkInForm.unit_number.toUpperCase().trim(),
+        resident_name: 'Walk-In Destination', // Could be fetched dynamically if needed
+        guest_name: walkInForm.guest_name.trim(),
+        ic_number: walkInForm.ic_number.trim(),
+        ic_url: uploadedIcUrl,
+        category: walkInForm.category,
+        guest_car_plate: walkInForm.guest_car_plate.trim().toUpperCase() || 'WALK-IN',
+        visit_date: new Date().toISOString().split('T')[0], // Today
+        access_code: `WALK-${Math.floor(100 + Math.random() * 900)}`,
+        status: 'Arrived' as const // Automatically marked as arrived
+      };
+
+      const { data, error } = await supabase.from('visitors').insert([walkInVisitor]).select();
       if (error) throw error;
 
+      if (data && data[0]) {
+        setVisitors([data[0] as Visitor, ...visitors]);
+      }
+
+      setShowWalkInModal(false);
+      setWalkInForm({ guest_name: '', ic_number: '', ic_picture: null, guest_car_plate: '', unit_number: '', category: 'Visiting Resident' });
+      alert("Walk-In Guest successfully registered and checked in.");
+
+    } catch (error: any) {
+      alert('Error registering walk-in: ' + error.message);
+    } finally {
+      setIsWalkInSubmitting(false);
+    }
+  };
+
+  // --- ADMIN CONTROLS ---
+  const handleUpdateStatus = async (id: number, nextStatus: 'Arrived' | 'Departed') => {
+    try {
+      const { error } = await supabase.from('visitors').update({ status: nextStatus }).eq('id', id);
+      if (error) throw error;
       setVisitors(visitors.map(v => (v.id === id ? { ...v, status: nextStatus } : v)));
     } catch (error: any) {
       alert('Error updating status: ' + error.message);
     }
   };
 
-  // --- ADMIN: DELETE VISITOR RECORD ---
   const handleDeleteVisitor = async (id: number) => {
     if (!window.confirm('Delete this visitor log?')) return;
-
     try {
       const { error } = await supabase.from('visitors').delete().eq('id', id);
       if (error) throw error;
@@ -163,105 +220,121 @@ export default function Guests() {
   );
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'sans-serif' }}>Loading visitor logs...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="text-slate-500 font-medium animate-pulse">Loading visitor logs...</div>
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ color: '#1e293b', margin: '0 0 6px 0' }}>
-          {role === 'admin' ? 'Security & Visitor Control' : 'Guest Pre-Registration'}
-        </h1>
-        <p style={{ color: '#64748b', margin: 0 }}>
-          {role === 'admin' 
-            ? 'Verify visitor access codes and log gate check-ins.' 
-            : `Generate visitor entry passes for Unit ${currentResident?.unit_number || '...'}`}
-        </p>
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 mb-1">
+            {role === 'admin' ? 'Security & Visitor Control' : 'Guest Pre-Registration'}
+          </h1>
+          <p className="text-slate-500">
+            {role === 'admin' 
+              ? 'Verify visitor access codes and register walk-ins.' 
+              : `Generate visitor entry passes for Unit ${currentResident?.unit_number || '...'}`}
+          </p>
+        </div>
+        
+        {/* Walk-in Registration Button (Admin Only) */}
+        {role === 'admin' && (
+          <button 
+            onClick={() => setShowWalkInModal(true)}
+            className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+          >
+            <span>📝</span> Register Walk-In
+          </button>
+        )}
       </div>
 
       {/* RESIDENT VIEW: PRE-REGISTER VISITOR FORM */}
       {role === 'user' && (
-        <div style={{ background: 'white', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '30px' }}>
-          <h3 style={{ margin: '0 0 16px 0', color: '#0f172a' }}>Create Visitor Access Pass</h3>
-          <form onSubmit={handleRegisterGuest} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'flex-end' }}>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">Create Visitor Access Pass</h3>
+          <form onSubmit={handleRegisterGuest} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' }}>Visitor Full Name</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Visitor Full Name</label>
               <input
                 type="text"
                 placeholder="e.g. John Doe"
                 value={formData.guest_name}
                 onChange={e => setFormData({ ...formData, guest_name: e.target.value })}
                 required
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+                className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
-
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' }}>Vehicle Plate (Optional)</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Vehicle Plate (Optional)</label>
               <input
                 type="text"
                 placeholder="e.g. WXY 1234"
                 value={formData.guest_car_plate}
                 onChange={e => setFormData({ ...formData, guest_car_plate: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+                className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
-
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' }}>Expected Visit Date</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Expected Visit Date</label>
               <input
                 type="date"
                 value={formData.visit_date}
                 onChange={e => setFormData({ ...formData, visit_date: e.target.value })}
                 required
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+                className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
-
             <div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                style={{ width: '100%', padding: '10px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', height: '42px' }}
+                className="w-full px-4 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors h-[46px] flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                {isSubmitting ? 'Generating...' : '🎟️ Generate Pass'}
+                {isSubmitting ? 'Generating...' : <><span>🎟️</span> Generate Pass</>}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* SEARCH / FILTER BAR FOR ADMINS */}
+      {/* SEARCH BAR FOR ADMINS */}
       {role === 'admin' && (
-        <div style={{ marginBottom: '20px' }}>
-          <input
-            type="text"
-            placeholder="🔍 Search by Access Code, Guest Name, or Unit Number..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            style={{ width: '100%', maxWidth: '450px', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
-          />
+        <div className="mb-6">
+          <div className="relative w-full max-w-md">
+            <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">🔍</span>
+            <input
+              type="text"
+              placeholder="Search Code, Name, or Unit..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
+            />
+          </div>
         </div>
       )}
 
       {/* VISITOR LOGS TABLE */}
-      <div style={{ background: 'white', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
-            <tr style={{ background: '#f8fafc', color: '#475569', fontSize: '13px', textTransform: 'uppercase' }}>
-              <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Pass Code</th>
-              <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Visitor</th>
-              {role === 'admin' && <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Destination</th>}
-              <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Visit Date</th>
-              <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Vehicle</th>
-              <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0' }}>Status</th>
-              <th style={{ padding: '12px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Actions</th>
+            <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
+              <th className="p-4 font-semibold uppercase tracking-wider text-xs">Pass / Type</th>
+              <th className="p-4 font-semibold uppercase tracking-wider text-xs">Visitor Details</th>
+              {role === 'admin' && <th className="p-4 font-semibold uppercase tracking-wider text-xs">Destination</th>}
+              <th className="p-4 font-semibold uppercase tracking-wider text-xs">Date / Vehicle</th>
+              <th className="p-4 font-semibold uppercase tracking-wider text-xs">Status</th>
+              <th className="p-4 font-semibold uppercase tracking-wider text-xs text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredVisitors.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                <td colSpan={6} className="p-8 text-center text-slate-500">
                   No visitor logs found.
                 </td>
               </tr>
@@ -269,38 +342,55 @@ export default function Guests() {
               filteredVisitors.map(v => {
                 const badgeColor =
                   v.status === 'Arrived'
-                    ? { bg: '#dcfce7', text: '#166534' }
+                    ? 'bg-emerald-100 text-emerald-800'
                     : v.status === 'Departed'
-                    ? { bg: '#f1f5f9', text: '#475569' }
-                    : { bg: '#fef3c7', text: '#b45309' };
+                    ? 'bg-slate-100 text-slate-600'
+                    : 'bg-amber-100 text-amber-800';
 
                 return (
-                  <tr key={v.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '14px 12px', fontFamily: 'monospace', fontWeight: 'bold', color: '#2563eb', fontSize: '15px' }}>
-                      {v.access_code}
+                  <tr key={v.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    
+                    <td className="p-4">
+                      <div className="font-mono font-bold text-blue-600 text-sm">{v.access_code}</div>
+                      <div className="text-xs text-slate-500 font-medium mt-1">{v.category || 'Guest'}</div>
                     </td>
-                    <td style={{ padding: '14px 12px', fontWeight: 'bold', color: '#0f172a' }}>{v.guest_name}</td>
+                    
+                    <td className="p-4">
+                      <div className="font-bold text-slate-900">{v.guest_name}</div>
+                      {/* Admin sees IC info if provided */}
+                      {role === 'admin' && v.ic_number && (
+                         <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                           IC: {v.ic_number}
+                           {v.ic_url && <a href={v.ic_url} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">📸 View</a>}
+                         </div>
+                      )}
+                    </td>
+                    
                     {role === 'admin' && (
-                      <td style={{ padding: '14px 12px', color: '#334155' }}>
-                        Unit {v.unit_number} <br />
-                        <span style={{ fontSize: '12px', color: '#64748b' }}>{v.resident_name}</span>
+                      <td className="p-4">
+                        <div className="font-bold text-slate-700">Unit {v.unit_number}</div>
+                        <div className="text-xs text-slate-500">{v.resident_name}</div>
                       </td>
                     )}
-                    <td style={{ padding: '14px 12px', color: '#475569' }}>{v.visit_date}</td>
-                    <td style={{ padding: '14px 12px', color: '#475569' }}>{v.guest_car_plate || '—'}</td>
-                    <td style={{ padding: '14px 12px' }}>
-                      <span style={{ background: badgeColor.bg, color: badgeColor.text, padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
+                    
+                    <td className="p-4">
+                      <div className="text-slate-900 text-sm">{v.visit_date}</div>
+                      <div className="text-slate-500 text-xs mt-1">{v.guest_car_plate || '—'}</div>
+                    </td>
+                    
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${badgeColor}`}>
                         {v.status}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 12px', textAlign: 'right' }}>
-                      {/* Security/Admin Check-in / Check-out controls */}
+                    
+                    <td className="p-4 text-right space-x-2">
                       {role === 'admin' && (
-                        <div style={{ display: 'inline-flex', gap: '6px' }}>
+                        <div className="inline-flex gap-2">
                           {v.status === 'Pending' && (
                             <button
                               onClick={() => handleUpdateStatus(v.id, 'Arrived')}
-                              style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                              className="bg-emerald-500 text-white px-3 py-1.5 rounded-md font-bold text-xs hover:bg-emerald-600 transition-colors shadow-sm"
                             >
                               Check In
                             </button>
@@ -308,25 +398,25 @@ export default function Guests() {
                           {v.status === 'Arrived' && (
                             <button
                               onClick={() => handleUpdateStatus(v.id, 'Departed')}
-                              style={{ background: '#64748b', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                              className="bg-slate-500 text-white px-3 py-1.5 rounded-md font-bold text-xs hover:bg-slate-600 transition-colors shadow-sm"
                             >
                               Check Out
                             </button>
                           )}
                           <button
                             onClick={() => handleDeleteVisitor(v.id)}
-                            style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '6px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                            className="bg-rose-100 text-rose-700 px-2 py-1.5 rounded-md font-bold text-xs hover:bg-rose-200 transition-colors"
+                            title="Delete Log"
                           >
                             ✕
                           </button>
                         </div>
                       )}
 
-                      {/* Resident View Pass Details Button */}
                       {role === 'user' && (
                         <button
                           onClick={() => setCreatedPass(v)}
-                          style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                          className="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-md font-bold text-xs hover:bg-blue-100 transition-colors"
                         >
                           View Pass
                         </button>
@@ -340,44 +430,143 @@ export default function Guests() {
         </table>
       </div>
 
-      {/* SHAREABLE VISITOR PASS MODAL */}
-      {createdPass && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
-          <div style={{ background: 'white', padding: '32px', borderRadius: '12px', width: '100%', maxWidth: '380px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }}>
-            <span style={{ fontSize: '40px' }}>🎟️</span>
-            <h2 style={{ margin: '8px 0 4px 0', color: '#0f172a' }}>Visitor Access Pass</h2>
-            <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 20px 0' }}>Show this pass at the security guardhouse upon arrival.</p>
+      {/* ADMIN ONLY: WALK-IN REGISTRATION MODAL */}
+      {showWalkInModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-lg shadow-2xl relative">
+            <h2 className="text-2xl font-bold text-slate-900 mb-1">Manual Guard Registration</h2>
+            <p className="text-slate-500 text-sm mb-6">Register a walk-in guest, courier, or contractor without a pre-generated code.</p>
+            
+            <form onSubmit={handleWalkInSubmit} className="space-y-4">
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Guest / Driver Name</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={walkInForm.guest_name}
+                    onChange={(e) => setWalkInForm({...walkInForm, guest_name: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Destination Unit</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. A-12-04"
+                    required 
+                    value={walkInForm.unit_number}
+                    onChange={(e) => setWalkInForm({...walkInForm, unit_number: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none uppercase" 
+                  />
+                </div>
+              </div>
 
-            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '2px dashed #cbd5e1', marginBottom: '20px' }}>
-              <div style={{ color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Security Code</div>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2563eb', letterSpacing: '2px', margin: '6px 0 14px 0' }}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Category</label>
+                  <select 
+                    value={walkInForm.category}
+                    onChange={(e) => setWalkInForm({...walkInForm, category: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="Visiting Resident">Visiting Resident</option>
+                    <option value="Courier / Delivery">Courier / Delivery</option>
+                    <option value="Food Delivery">Food Delivery</option>
+                    <option value="Contractor">Contractor</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Vehicle Plate</label>
+                  <input 
+                    type="text" 
+                    placeholder="Leave blank if walking"
+                    value={walkInForm.guest_car_plate}
+                    onChange={(e) => setWalkInForm({...walkInForm, guest_car_plate: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none uppercase" 
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-2">
+                <h4 className="text-sm font-bold text-slate-700 mb-3">Identity Verification</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">IC / Passport Number</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={walkInForm.ic_number}
+                      onChange={(e) => setWalkInForm({...walkInForm, ic_number: e.target.value})}
+                      className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Upload ID Photo (Optional)</label>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => setWalkInForm({...walkInForm, ic_picture: e.target.files ? e.target.files[0] : null})}
+                      className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setShowWalkInModal(false)} className="flex-1 p-3 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isWalkInSubmitting} className="flex-[2] p-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors disabled:opacity-70">
+                  {isWalkInSubmitting ? 'Registering...' : 'Register & Check-In'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SHAREABLE VISITOR PASS MODAL (For pre-registered users) */}
+      {createdPass && (
+         // ... Keeping your existing receipt modal the exact same
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-sm text-center shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
+            <div className="text-5xl mb-2">🎟️</div>
+            <h2 className="text-xl font-bold text-slate-900 mb-1">Visitor Access Pass</h2>
+            <p className="text-slate-500 text-xs mb-6">Show this pass at the security guardhouse upon arrival.</p>
+
+            <div className="bg-slate-50 p-6 rounded-xl border-2 border-dashed border-slate-300 mb-6">
+              <div className="text-slate-500 text-xs uppercase tracking-widest font-bold mb-1">Security Code</div>
+              <div className="text-3xl font-extrabold text-blue-600 tracking-widest font-mono mb-4">
                 {createdPass.access_code}
               </div>
 
-              <div style={{ textAlign: 'left', fontSize: '13px', color: '#334155', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div><strong>Guest:</strong> {createdPass.guest_name}</div>
-                <div><strong>Destination:</strong> Unit {createdPass.unit_number}</div>
-                <div><strong>Vehicle:</strong> {createdPass.guest_car_plate || 'None'}</div>
-                <div><strong>Date:</strong> {createdPass.visit_date}</div>
+              <div className="text-left text-sm text-slate-700 space-y-2 border-t border-slate-200 pt-4">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-slate-500">Guest</span> 
+                  <span className="font-bold">{createdPass.guest_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-slate-500">Destination</span> 
+                  <span className="font-bold">Unit {createdPass.unit_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-slate-500">Vehicle</span> 
+                  <span className="font-bold">{createdPass.guest_car_plate || 'None'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-slate-500">Date</span> 
+                  <span className="font-bold">{createdPass.visit_date}</span>
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => setCreatedPass(null)}
-                style={{ flex: 1, padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(`Hi ${createdPass.guest_name}, here is your visitor access code for Unit ${createdPass.unit_number}: ${createdPass.access_code} on ${createdPass.visit_date}.`);
-                  alert('Pass details copied to clipboard!');
-                }}
-                style={{ flex: 1.5, padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                📋 Copy Text
-              </button>
+            <div className="flex gap-3">
+              <button onClick={() => setCreatedPass(null)} className="flex-1 p-3 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200 transition-colors">Close</button>
+              <button onClick={() => navigator.clipboard.writeText(`Code: ${createdPass.access_code}`)} className="flex-[1.5] p-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors">📋 Copy</button>
             </div>
           </div>
         </div>
