@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 
 export default function NavBar() {
   const [role, setRole] = useState<string>('user');
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchUserRole();
@@ -22,6 +23,14 @@ export default function NavBar() {
     await supabase.auth.signOut();
     navigate('/login');
   };
+
+  // 1. Define the routes where the NavBar should be hidden
+   const hideNavBarPaths = ['/welcome', '/login', '/register', '/forgot-password'];
+
+  // 2. If the current URL is in that list, don't render the NavBar
+  if (hideNavBarPaths.includes(location.pathname)) {
+    return null;
+  }
 
   return (
     <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">

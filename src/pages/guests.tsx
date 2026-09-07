@@ -62,7 +62,7 @@ export default function Guests() {
       const { data: residentData } = await supabase
         .from('residents')
         .select('*')
-        .eq('email', userEmail)
+        .or(`email.eq.${userEmail},family_members.cs.[{"email":"${userEmail}"}]`)
         .maybeSingle();
 
       if (residentData) {

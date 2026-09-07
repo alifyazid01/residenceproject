@@ -12,7 +12,8 @@ import Parking from './pages/parking';
 import Contacts from './pages/contacts';
 import Register from './pages/register';
 import ForgotPassword from './pages/forgot-password';
-import UpdatePassword from './pages/update-password';
+import UpdatePassword from './pages/update-password'
+import Landing from './pages/landing';;
 
 function App() {
   return (
@@ -94,6 +95,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/welcome" element={<Landing />} />
+
         <Route path="/register" element={<Register />} />
 
         <Route path="/login" element={<Login />} /> 

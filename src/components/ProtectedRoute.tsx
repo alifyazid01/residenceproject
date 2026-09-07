@@ -29,7 +29,7 @@ export default function ProtectedRoute({ children }: { children: JSX.Element }) 
 
   // 3. The Bouncer: If no session exists, kick them to the login page
   if (!session) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/welcome" replace />;
   }
 
   // 4. If they are logged in, let them through to the page

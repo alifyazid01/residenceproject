@@ -44,11 +44,11 @@ export default function Parking() {
           if (error) throw error;
           if (data) setBays(data);
         } else {
-          // RESIDENT: Fetch only their assigned bays
+          // RESIDENT: Fetch only their assigned bays (checks primary or family members)
           const { data: residentData } = await supabase
             .from('residents')
             .select('unit_number')
-            .eq('email', userEmail)
+            .or(`email.eq.${userEmail},family_members.cs.[{"email":"${userEmail}"}]`)
             .maybeSingle();
 
           if (residentData) {

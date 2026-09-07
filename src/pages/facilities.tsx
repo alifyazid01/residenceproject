@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 
 export default function Facilities() {
+  const [role, setRole] = useState<string>('user');
+  const [userUnit, setUserUnit] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
+  
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<any[]>([]);
   
@@ -36,12 +40,41 @@ export default function Facilities() {
   ];
 
   useEffect(() => {
-    fetchBookings();
+    fetchSessionAndBookings();
   }, [selectedDate, selectedFacility]);
 
-  const fetchBookings = async () => {
+  const fetchSessionAndBookings = async () => {
     setLoading(true);
     try {
+      // 1. Check Auth & Get Resident Profile
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const currentRole = session.user.user_metadata?.role || 'user';
+        const userEmail = session.user.email || '';
+        setRole(currentRole);
+
+        // Fetch using the same .or() logic to support Family Members
+        const { data: residentData } = await supabase
+          .from('residents')
+          .select('*')
+          .or(`email.eq.${userEmail},family_members.cs.[{"email":"${userEmail}"}]`)
+          .maybeSingle();
+
+        if (residentData) {
+          setUserUnit(residentData.unit_number);
+          
+          // Determine if they are the primary owner or a family member to get the correct name
+          let currentName = residentData.name;
+          if (residentData.email !== userEmail && residentData.family_members) {
+            const member = residentData.family_members.find((m: any) => m.email === userEmail);
+            if (member) currentName = member.name;
+          }
+          setUserName(currentName);
+        }
+      }
+
+      // 2. Fetch the Bookings for the selected date and facility
       const { data, error } = await supabase
         .from('facility_bookings')
         .select('*')
@@ -50,6 +83,7 @@ export default function Facilities() {
         
       if (error) throw error;
       if (data) setBookings(data);
+
     } catch (error: any) {
       console.error("Error fetching data:", error.message);
     } finally {
@@ -60,21 +94,16 @@ export default function Facilities() {
   // --- TIME VALIDATION LOGIC ---
   const isSlotPassed = (dateStr: string, slotStr: string) => {
     const now = new Date();
-    
-    // Extract the start time (e.g. "08:00 AM" from "08:00 AM - 10:00 AM")
     const startTimeStr = slotStr.split(' - ')[0];
     const [time, modifier] = startTimeStr.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
 
-    // Convert to 24-hour format
     if (modifier === 'PM' && hours < 12) hours += 12;
     if (modifier === 'AM' && hours === 12) hours = 0;
 
-    // Create a Date object for this exact slot
     const slotDateTime = new Date(dateStr);
     slotDateTime.setHours(hours, minutes, 0, 0);
 
-    // Return true if the slot's start time has already passed
     return slotDateTime < now;
   };
 
@@ -93,6 +122,11 @@ export default function Facilities() {
 
   const openBookingModal = (slot: string) => {
     setActiveSlot(slot);
+    // Auto-fill the form so the user doesn't have to type it
+    setFormData({
+      unit_number: userUnit,
+      resident_name: userName
+    });
     setShowForm(true);
   };
 
@@ -126,10 +160,9 @@ export default function Facilities() {
       }
       
       setShowForm(false);
-      setFormData({ unit_number: '', resident_name: '' });
     } catch (error: any) {
       alert(error.message);
-      fetchBookings(); // Refresh to catch latest state
+      fetchSessionAndBookings(); // Refresh to catch latest state
     } finally {
       setIsSubmitting(false);
     }
@@ -200,6 +233,9 @@ export default function Facilities() {
                   const booking = bookings.find(b => b.time_slot === slot);
                   const isBooked = !!booking;
                   const slotPassed = isSlotPassed(selectedDate, slot);
+                  
+                  // Check if the current user owns this booking or is an admin
+                  const canCancel = isBooked && (role === 'admin' || booking.unit_number === userUnit);
 
                   return (
                     <tr 
@@ -240,12 +276,16 @@ export default function Facilities() {
 
                       <td className="p-4 text-right">
                         {isBooked ? (
-                          <button 
-                            onClick={() => handleCancel(booking.id)}
-                            className="bg-rose-50 text-rose-600 border border-rose-200 px-4 py-1.5 rounded-md font-bold text-xs hover:bg-rose-100 transition-colors"
-                          >
-                            Cancel
-                          </button>
+                          canCancel ? (
+                            <button 
+                              onClick={() => handleCancel(booking.id)}
+                              className="bg-rose-50 text-rose-600 border border-rose-200 px-4 py-1.5 rounded-md font-bold text-xs hover:bg-rose-100 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          ) : (
+                            <span className="text-slate-400 text-xs italic font-medium px-4">Locked</span>
+                          )
                         ) : slotPassed ? (
                           <span className="text-slate-400 text-xs italic font-medium px-4">Closed</span>
                         ) : (
@@ -282,26 +322,36 @@ export default function Facilities() {
             
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Unit Number</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                  Unit Number {role === 'user' && '(Auto-filled)'}
+                </label>
                 <input 
                   type="text" 
                   placeholder="e.g. A-01" 
                   value={formData.unit_number}
                   onChange={(e) => setFormData({...formData, unit_number: e.target.value.toUpperCase()})}
                   required
-                  className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
+                  readOnly={role === 'user'}
+                  className={`w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none uppercase ${
+                    role === 'user' ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Resident Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                  Resident Name {role === 'user' && '(Auto-filled)'}
+                </label>
                 <input 
                   type="text" 
                   placeholder="Your Full Name" 
                   value={formData.resident_name}
                   onChange={(e) => setFormData({...formData, resident_name: e.target.value})}
                   required
-                  className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                  readOnly={role === 'user'}
+                  className={`w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none ${
+                    role === 'user' ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''
+                  }`}
                 />
               </div>
               

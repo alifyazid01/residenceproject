@@ -48,8 +48,24 @@ export default function Bills() {
         if (billsData.data) setBills(billsData.data);
         if (residentsData.data) setResidents(residentsData.data);
       } else {
-        const { data } = await supabase.from('bills').select('*').eq('resident_email', currentEmail).order('issued_at', { ascending: false });
-        if (data) setBills(data);
+        // STEP 1: Find the resident profile (either as primary OR as a family member)
+        const { data: residentData } = await supabase
+          .from('residents')
+          .select('*')
+          .or(`email.eq.${currentEmail},family_members.cs.[{"email":"${currentEmail}"}]`)
+          .maybeSingle();
+
+        if (residentData) {
+          // STEP 2: Fetch the bills using the primary resident's email
+          const primaryEmail = residentData.email;
+          const { data } = await supabase
+            .from('bills')
+            .select('*')
+            .eq('resident_email', primaryEmail)
+            .order('issued_at', { ascending: false });
+            
+          if (data) setBills(data);
+        }
       }
     }
     setLoading(false);
@@ -81,14 +97,9 @@ export default function Bills() {
            };
         });
 
-        console.log("PAYLOAD TO SEND:", billsToInsert); 
-
         const { data, error } = await supabase.from('bills').insert(billsToInsert).select();
         
-        if (error) {
-            console.error("Supabase Error Details:", error);
-            throw error;
-        }
+        if (error) throw error;
         
         if (data) {
           const updatedBills = [...data, ...bills].sort((a,b) => new Date(b.issued_at).getTime() - new Date(a.issued_at).getTime());
