@@ -21,7 +21,7 @@ export default function NavBar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/login');
+    navigate('/welcome');
   };
 
   // 1. Define the routes where the NavBar should be hidden
