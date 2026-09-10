@@ -168,64 +168,77 @@ export default function Facilities() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 flex justify-center items-center">
+        <div className="text-slate-600 font-medium animate-pulse text-lg">Checking schedule availability...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 relative">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">Facility Schedule & Booking</h1>
-        <p className="text-slate-500">Reserve common areas and amenities for your unit.</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 font-sans relative pb-12">
+      
+      {/* Ambient Glow */}
+      <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/60 rounded-full mix-blend-overlay filter blur-[100px] pointer-events-none"></div>
 
-      {/* FILTER BAR */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+      <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Facility Tabs */}
-        <div className="flex flex-wrap gap-2">
-          {facilityOptions.map((fac) => (
-            <button
-              key={fac}
-              onClick={() => setSelectedFacility(fac)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold border transition-colors ${
-                selectedFacility === fac 
-                  ? 'bg-blue-50 border-blue-200 text-blue-700' 
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {fac}
-            </button>
-          ))}
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-black mb-2 tracking-tight">
+            Facility Schedule & Booking
+          </h1>
+          <p className="text-slate-600 font-medium">Reserve common areas and amenities for your unit.</p>
         </div>
 
-        {/* Date Picker */}
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <label className="font-bold text-slate-500 text-sm uppercase tracking-wide">Date:</label>
-          <input 
-            type="date" 
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="p-2.5 rounded-lg border border-slate-300 font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-auto"
-          />
-        </div>
-      </div>
+        {/* FILTER BAR */}
+        <div className="bg-white/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] mb-8 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+          
+          {/* Facility Tabs */}
+          <div className="flex flex-wrap gap-3">
+            {facilityOptions.map((fac) => (
+              <button
+                key={fac}
+                onClick={() => setSelectedFacility(fac)}
+                className={`px-5 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 shadow-sm ${
+                  selectedFacility === fac 
+                    ? 'bg-slate-900 border-slate-900 text-white transform hover:scale-105' 
+                    : 'bg-white/50 border-white/60 text-slate-700 hover:bg-white hover:text-slate-900 hover:shadow-md'
+                }`}
+              >
+                {fac}
+              </button>
+            ))}
+          </div>
 
-      {/* SCHEDULE TABLE CARD */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        
-        <div className="p-6 border-b border-slate-200 bg-slate-50/50">
-          <h3 className="text-xl font-bold text-slate-900">{selectedFacility}</h3>
-          <p className="text-slate-500 text-sm mt-1">Showing availability for <span className="font-semibold text-slate-700">{selectedDate}</span></p>
+          {/* Date Picker */}
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <label className="font-bold text-slate-500 text-xs uppercase tracking-wider">Date</label>
+            <input 
+              type="date" 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="p-3 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-bold shadow-sm transition-all w-full md:w-auto cursor-pointer"
+            />
+          </div>
         </div>
 
-        {loading ? (
-          <div className="p-12 text-center text-slate-500 font-medium animate-pulse">Checking schedule availability...</div>
-        ) : (
+        {/* SCHEDULE TABLE CARD */}
+        <div className="bg-white/40 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] overflow-hidden">
+          
+          <div className="p-8 border-b border-white/50 bg-white/20">
+            <h3 className="text-2xl font-extrabold text-slate-900">{selectedFacility}</h3>
+            <p className="text-slate-600 text-sm mt-1 font-medium">Showing availability for <span className="font-bold text-slate-800">{selectedDate}</span></p>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
-                  <th className="p-4 font-semibold">Time Slot</th>
-                  <th className="p-4 font-semibold">Status</th>
-                  <th className="p-4 font-semibold">Booked By</th>
-                  <th className="p-4 font-semibold text-right">Action</th>
+                <tr className="bg-white/30 border-b border-white/50 text-xs text-slate-700">
+                  <th className="p-5 font-bold uppercase tracking-wider">Time Slot</th>
+                  <th className="p-5 font-bold uppercase tracking-wider">Status</th>
+                  <th className="p-5 font-bold uppercase tracking-wider">Booked By</th>
+                  <th className="p-5 font-bold uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -234,64 +247,63 @@ export default function Facilities() {
                   const isBooked = !!booking;
                   const slotPassed = isSlotPassed(selectedDate, slot);
                   
-                  // Check if the current user owns this booking or is an admin
                   const canCancel = isBooked && (role === 'admin' || booking.unit_number === userUnit);
 
                   return (
                     <tr 
                       key={index} 
-                      className={`border-b border-slate-100 transition-colors ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
-                      } ${slotPassed && !isBooked ? 'opacity-50' : 'hover:bg-slate-50'}`}
+                      className={`border-b border-white/30 transition-colors ${
+                        slotPassed && !isBooked ? 'opacity-50' : 'hover:bg-white/50'
+                      }`}
                     >
-                      <td className={`p-4 font-bold ${slotPassed && !isBooked ? 'text-slate-400' : 'text-slate-900'}`}>
+                      <td className={`p-5 font-extrabold ${slotPassed && !isBooked ? 'text-slate-500' : 'text-slate-900'}`}>
                         ⏰ {slot}
                       </td>
                       
-                      <td className="p-4">
+                      <td className="p-5">
                         {isBooked ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                          <span className="px-4 py-1.5 rounded-full text-xs font-bold border bg-rose-500/20 text-rose-800 border-rose-500/30">
                             🔴 Booked
                           </span>
                         ) : slotPassed ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                          <span className="px-4 py-1.5 rounded-full text-xs font-bold border bg-slate-500/20 text-slate-700 border-slate-500/30">
                             ⚪ Expired
                           </span>
                         ) : (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          <span className="px-4 py-1.5 rounded-full text-xs font-bold border bg-emerald-500/20 text-emerald-800 border-emerald-500/30">
                             🟢 Available
                           </span>
                         )}
                       </td>
 
-                      <td className="p-4 text-slate-600 text-sm">
+                      <td className="p-5 text-slate-700 text-sm">
                         {isBooked ? (
                           <span>
-                            <strong className="text-slate-800">{booking.resident_name}</strong> (Unit {booking.unit_number})
+                            <strong className="text-slate-900">{booking.resident_name}</strong> <span className="text-slate-500 text-xs ml-1">(Unit {booking.unit_number})</span>
                           </span>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400 font-medium">—</span>
                         )}
                       </td>
 
-                      <td className="p-4 text-right">
+                      <td className="p-5 text-right">
                         {isBooked ? (
                           canCancel ? (
                             <button 
                               onClick={() => handleCancel(booking.id)}
-                              className="bg-rose-50 text-rose-600 border border-rose-200 px-4 py-1.5 rounded-md font-bold text-xs hover:bg-rose-100 transition-colors"
+                              className="bg-rose-500/10 text-rose-700 border border-rose-500/20 px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-rose-500/20 transition-all shadow-sm"
                             >
                               Cancel
                             </button>
                           ) : (
-                            <span className="text-slate-400 text-xs italic font-medium px-4">Locked</span>
+                            <span className="text-slate-500 text-xs italic font-medium px-4">Locked</span>
                           )
                         ) : slotPassed ? (
-                          <span className="text-slate-400 text-xs italic font-medium px-4">Closed</span>
+                          <span className="text-slate-500 text-xs italic font-medium px-4">Closed</span>
                         ) : (
                           <button 
                             onClick={() => openBookingModal(slot)}
-                            className="bg-blue-600 text-white px-4 py-1.5 rounded-md font-bold text-xs hover:bg-blue-700 transition-colors shadow-sm"
+                            className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-xs hover:bg-black transition-all transform hover:scale-[1.02] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
                           >
                             Book Slot
                           </button>
@@ -303,70 +315,70 @@ export default function Facilities() {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* BOOKING CONFIRMATION MODAL */}
-      {showForm && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl">
-            <h2 className="text-2xl font-bold text-slate-900 mb-1">Confirm Reservation</h2>
-            
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 mt-4">
-              <strong className="block text-slate-900 text-lg mb-1">{selectedFacility}</strong>
-              <div className="text-slate-600 text-sm flex flex-col gap-1">
-                <span>📅 <span className="font-semibold">{selectedDate}</span></span>
-                <span>⏰ <span className="font-semibold">{activeSlot}</span></span>
-              </div>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                  Unit Number {role === 'user' && '(Auto-filled)'}
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. A-01" 
-                  value={formData.unit_number}
-                  onChange={(e) => setFormData({...formData, unit_number: e.target.value.toUpperCase()})}
-                  required
-                  readOnly={role === 'user'}
-                  className={`w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none uppercase ${
-                    role === 'user' ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                  Resident Name {role === 'user' && '(Auto-filled)'}
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="Your Full Name" 
-                  value={formData.resident_name}
-                  onChange={(e) => setFormData({...formData, resident_name: e.target.value})}
-                  required
-                  readOnly={role === 'user'}
-                  className={`w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none ${
-                    role === 'user' ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''
-                  }`}
-                />
+        {/* BOOKING CONFIRMATION MODAL */}
+        {showForm && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex justify-center items-center z-50 p-4">
+            <div className="bg-white/90 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl relative border border-white/60">
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-1">Confirm Reservation</h2>
+              
+              <div className="bg-white/50 p-6 rounded-2xl border border-white/60 shadow-inner mb-6 mt-4">
+                <strong className="block text-slate-900 text-lg mb-2">{selectedFacility}</strong>
+                <div className="text-slate-700 text-sm flex flex-col gap-2">
+                  <span className="flex items-center gap-2">📅 <span className="font-bold">{selectedDate}</span></span>
+                  <span className="flex items-center gap-2">⏰ <span className="font-bold">{activeSlot}</span></span>
+                </div>
               </div>
               
-              <div className="flex gap-3 mt-4">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 p-3 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSubmitting} className="flex-[2] p-3 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-600 transition-colors disabled:opacity-70">
-                  {isSubmitting ? 'Reserving...' : 'Confirm Booking'}
-                </button>
-              </div>
-            </form>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
+                    Unit Number {role === 'user' && <span className="text-slate-400 lowercase normal-case">(Auto-filled)</span>}
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. A-01" 
+                    value={formData.unit_number}
+                    onChange={(e) => setFormData({...formData, unit_number: e.target.value.toUpperCase()})}
+                    required
+                    readOnly={role === 'user'}
+                    className={`w-full p-3.5 rounded-xl border border-white/60 outline-none uppercase font-medium shadow-sm transition-all ${
+                      role === 'user' ? 'bg-slate-100/50 text-slate-500 cursor-not-allowed' : 'bg-white/50 focus:bg-white focus:ring-2 focus:ring-slate-900 text-slate-800'
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
+                    Resident Name {role === 'user' && <span className="text-slate-400 lowercase normal-case">(Auto-filled)</span>}
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="Your Full Name" 
+                    value={formData.resident_name}
+                    onChange={(e) => setFormData({...formData, resident_name: e.target.value})}
+                    required
+                    readOnly={role === 'user'}
+                    className={`w-full p-3.5 rounded-xl border border-white/60 outline-none font-medium shadow-sm transition-all ${
+                      role === 'user' ? 'bg-slate-100/50 text-slate-500 cursor-not-allowed' : 'bg-white/50 focus:bg-white focus:ring-2 focus:ring-slate-900 text-slate-800'
+                    }`}
+                  />
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 p-3.5 bg-white/50 text-slate-700 border border-white/60 rounded-xl font-bold hover:bg-white transition-colors shadow-sm">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={isSubmitting} className="flex-[2] p-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all transform hover:scale-[1.02] shadow-[0_4px_12px_rgba(0,0,0,0.1)] disabled:opacity-70 disabled:transform-none">
+                    {isSubmitting ? 'Reserving...' : 'Confirm Booking'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
