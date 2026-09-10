@@ -13,3 +13,29 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+@media print {
+  /* 1. Hide everything on the page by default */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* 2. Only show elements with the 'print-area' class */
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  
+  /* 3. Move the receipt to the top-left corner of the paper and remove shadows/borders */
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100% !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+  }
+}

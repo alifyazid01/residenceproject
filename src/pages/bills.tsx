@@ -403,7 +403,9 @@ export default function Bills() {
         {/* E-RECEIPT MODAL (SHARED) */}
         {showReceiptModal && selectedBill && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex justify-center items-center z-50 p-4">
-            <div className="bg-white/90 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl border border-white/60">
+            
+            {/* ADDED 'print-area' class here to target it for printing */}
+            <div className="print-area bg-white/90 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl border border-white/60">
               
               <div className="text-center mb-6">
                 <div className="text-5xl mb-4">✅</div>
@@ -423,7 +425,8 @@ export default function Bills() {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              {/* ADDED 'print:hidden' class here so the buttons don't show up on the paper */}
+              <div className="flex gap-3 mt-6 print:hidden">
                 <button onClick={() => setShowReceiptModal(false)} className="flex-1 p-3.5 bg-white/50 text-slate-700 border border-white/60 rounded-xl font-bold hover:bg-white transition-colors">Close</button>
                 <button onClick={() => window.print()} className="flex-[2] p-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all transform hover:scale-105 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex justify-center items-center gap-2">
                   <span>🖨️</span> Print Receipt
