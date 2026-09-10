@@ -95,159 +95,170 @@ export default function Contacts() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="text-slate-500 font-medium animate-pulse">Loading contact directory...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 flex justify-center items-center">
+        <div className="text-slate-600 font-medium animate-pulse text-lg">Loading contact directory...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 font-sans relative pb-12">
       
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">Management & Emergency Contacts</h1>
-        <p className="text-slate-500">Official directory for the Joint Management Body and Security Guardhouse.</p>
-      </div>
+      {/* Ambient Glow */}
+      <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/60 rounded-full mix-blend-overlay filter blur-[100px] pointer-events-none"></div>
 
-      {/* Auto-filling Responsive Grid */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+      <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 lg:px-8 relative z-10">
         
-        {contacts.map((contact, index) => {
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-black mb-2 tracking-tight">
+            Management & Emergency Contacts
+          </h1>
+          <p className="text-slate-600 font-medium">Official directory for the Joint Management Body and Security Guardhouse.</p>
+        </div>
+
+        {/* Auto-filling Responsive Grid */}
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
           
-          let badgeStyle = "bg-slate-100 text-slate-600 border-slate-200";
-          if (contact.department === 'Security') badgeStyle = "bg-rose-50 text-rose-700 border-rose-200";
-          if (contact.department === 'Management') badgeStyle = "bg-indigo-50 text-indigo-700 border-indigo-200";
-          if (contact.department === 'Maintenance') badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
-
-          return (
-            <div 
-              key={index} 
-              className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow relative overflow-hidden"
-            >
-              <div className={`absolute top-0 left-0 w-full h-1.5 ${
-                contact.department === 'Security' ? 'bg-rose-500' :
-                contact.department === 'Management' ? 'bg-indigo-500' :
-                contact.department === 'Maintenance' ? 'bg-amber-500' : 'bg-slate-500'
-              }`}></div>
-
-              <div className="flex justify-between items-start mb-4 mt-2">
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${badgeStyle}`}>
-                  {contact.department}
-                </span>
-
-                {/* EDIT BUTTON (ADMIN ONLY) */}
-                {userRole === 'admin' && (
-                  <button 
-                    onClick={() => openEditModal(contact)}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200 transition-colors"
-                  >
-                    Edit
-                  </button>
-                )}
-              </div>
-              
-              <h2 className="text-xl font-bold text-slate-900 mb-1 leading-tight">{contact.name}</h2>
-              <p className="text-sm font-bold text-slate-500 mb-6">{contact.role}</p>
-              
-              <div className="bg-slate-50 p-4 rounded-lg flex flex-col gap-3 border border-slate-100 mt-auto">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">📞</span>
-                  <span className={`text-sm ${contact.phone ? 'font-bold text-slate-900' : 'italic text-slate-400'}`}>
-                    {contact.phone || 'Not provided'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">✉️</span>
-                  <span className={`text-sm break-all ${contact.email ? 'font-bold text-slate-900' : 'italic text-slate-400'}`}>
-                    {contact.email || 'Not provided'}
-                  </span>
-                </div>
-              </div>
-
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ADMIN EDIT MODAL */}
-      {showEditModal && activeContact && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <h2 className="text-2xl font-bold text-slate-900 mb-1">Edit Contact</h2>
-            <p className="text-slate-500 text-sm mb-6">Update details for <strong className="text-slate-700">{activeContact.name}</strong>.</p>
+          {contacts.map((contact, index) => {
             
-            <form onSubmit={handleUpdateContact} className="space-y-4">
+            // Premium Glass Badges for Departments
+            let badgeStyle = "bg-slate-500/20 text-slate-800 border-slate-500/30";
+            if (contact.department === 'Security') badgeStyle = "bg-rose-500/20 text-rose-800 border-rose-500/30";
+            if (contact.department === 'Management') badgeStyle = "bg-indigo-500/20 text-indigo-800 border-indigo-500/30";
+            if (contact.department === 'Maintenance') badgeStyle = "bg-amber-500/20 text-amber-800 border-amber-500/30";
+
+            return (
+              <div 
+                key={index} 
+                className="bg-white/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col hover:bg-white/50 transition-all duration-300 group relative overflow-hidden"
+              >
+                {/* Thin Colored Top Bar for quick visual scanning */}
+                <div className={`absolute top-0 left-0 w-full h-1.5 ${
+                  contact.department === 'Security' ? 'bg-gradient-to-r from-rose-400 to-rose-600' :
+                  contact.department === 'Management' ? 'bg-gradient-to-r from-indigo-400 to-indigo-600' :
+                  contact.department === 'Maintenance' ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-slate-400 to-slate-600'
+                }`}></div>
+
+                <div className="flex justify-between items-start mb-4 mt-2">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${badgeStyle}`}>
+                    {contact.department}
+                  </span>
+
+                  {/* EDIT BUTTON (ADMIN ONLY) */}
+                  {userRole === 'admin' && (
+                    <button 
+                      onClick={() => openEditModal(contact)}
+                      className="text-xs font-bold text-slate-800 hover:text-black bg-white/50 hover:bg-white px-3 py-1.5 rounded-lg border border-white/60 transition-all shadow-sm"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                
+                <h2 className="text-xl font-bold text-slate-900 mb-1 leading-tight group-hover:transform group-hover:-translate-y-0.5 transition-transform">{contact.name}</h2>
+                <p className="text-sm font-bold text-slate-500 mb-6">{contact.role}</p>
+                
+                {/* Glass Inner Box for Contact Info */}
+                <div className="bg-white/30 p-4 rounded-2xl flex flex-col gap-3 border border-white/50 mt-auto shadow-inner">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg opacity-80">📞</span>
+                    <span className={`text-sm ${contact.phone ? 'font-bold text-slate-800' : 'italic text-slate-400'}`}>
+                      {contact.phone || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg opacity-80">✉️</span>
+                    <span className={`text-sm break-all ${contact.email ? 'font-bold text-slate-800' : 'italic text-slate-400'}`}>
+                      {contact.email || 'Not provided'}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ADMIN EDIT MODAL */}
+        {showEditModal && activeContact && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex justify-center items-center z-50 p-4">
+            <div className="bg-white/90 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl relative border border-white/60">
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-1">Edit Contact</h2>
+              <p className="text-slate-600 font-medium text-sm mb-6">Update details for <strong className="text-slate-800">{activeContact.name}</strong>.</p>
               
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Name / Title</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" 
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Role</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Head Security Guard"
-                  required 
-                  value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value})}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" 
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Department</label>
-                <select 
-                  value={formData.department}
-                  onChange={(e) => setFormData({...formData, department: e.target.value})}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  <option value="Security">Security</option>
-                  <option value="Management">Management</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Emergency">Emergency</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleUpdateContact} className="space-y-4">
+                
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Phone (Optional)</label>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Name / Title</label>
                   <input 
                     type="text" 
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" 
+                    required 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="w-full p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm transition-all" 
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Email (Optional)</label>
-                  <input 
-                    type="email" 
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" 
-                  />
-                </div>
-              </div>
 
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 p-3 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSubmitting} className="flex-[2] p-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-70">
-                  {isSubmitting ? 'Saving...' : 'Save Updates'}
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Role</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Head Security Guard"
+                    required 
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    className="w-full p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm transition-all" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Department</label>
+                  <select 
+                    value={formData.department}
+                    onChange={(e) => setFormData({...formData, department: e.target.value})}
+                    className="w-full p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm transition-all"
+                  >
+                    <option value="Security">Security</option>
+                    <option value="Management">Management</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Emergency">Emergency</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Phone (Optional)</label>
+                    <input 
+                      type="text" 
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm transition-all" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Email (Optional)</label>
+                    <input 
+                      type="email" 
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm transition-all" 
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-6">
+                  <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 p-3.5 bg-white/50 text-slate-700 border border-white/60 rounded-xl font-bold hover:bg-white transition-colors shadow-sm">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={isSubmitting} className="flex-[2] p-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all transform hover:scale-[1.02] shadow-[0_4px_12px_rgba(0,0,0,0.1)] disabled:opacity-70 disabled:transform-none">
+                    {isSubmitting ? 'Saving...' : 'Save Updates'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -22,7 +22,7 @@ export default function Bills() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState<any>(null);
-  const [payingAll, setPayingAll] = useState(false); // Tracks if the user is paying one or all
+  const [payingAll, setPayingAll] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -48,7 +48,6 @@ export default function Bills() {
         if (billsData.data) setBills(billsData.data);
         if (residentsData.data) setResidents(residentsData.data);
       } else {
-        // STEP 1: Find the resident profile (either as primary OR as a family member)
         const { data: residentData } = await supabase
           .from('residents')
           .select('*')
@@ -56,7 +55,6 @@ export default function Bills() {
           .maybeSingle();
 
         if (residentData) {
-          // STEP 2: Fetch the bills using the primary resident's email
           const primaryEmail = residentData.email;
           const { data } = await supabase
             .from('bills')
@@ -71,7 +69,6 @@ export default function Bills() {
     setLoading(false);
   };
 
-  // --- ADMIN FUNCTION: ISSUE BILL(S) ---
   const handleIssueBill = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -139,7 +136,6 @@ export default function Bills() {
     }
   };
 
-  // --- ADMIN FUNCTION: DELETE BILL ---
   const handleDeleteBill = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this bill? This action cannot be undone.")) return;
 
@@ -152,7 +148,6 @@ export default function Bills() {
     }
   };
 
-  // --- USER FUNCTION: PROCESS PAYMENT(S) ---
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -197,238 +192,248 @@ export default function Bills() {
   const totalPendingAmount = pendingBills.reduce((sum, b) => sum + parseFloat(b.amount), 0);
 
   if (loading) return (
-    <div className="flex justify-center items-center min-h-[50vh]">
-      <div className="text-slate-500 font-medium animate-pulse">Loading billing data...</div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 flex justify-center items-center">
+      <div className="text-slate-600 font-medium animate-pulse text-lg">Loading billing data...</div>
     </div>
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">
-          {role === 'admin' ? 'Management Billing Portal' : 'My Billing & Invoices'}
-        </h1>
-        <p className="text-slate-500">Manage invoices, payments, and electronic receipts.</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 font-sans relative pb-12">
+      
+      {/* Ambient Glow */}
+      <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/60 rounded-full mix-blend-overlay filter blur-[100px] pointer-events-none"></div>
 
-      {/* ADMIN VIEW: ISSUE BILL FORM */}
-      {role === 'admin' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Issue New Bill</h3>
-          
-          <form onSubmit={handleIssueBill} className="flex flex-col md:flex-row gap-4 md:items-end">
-            <div className="flex-[2]">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Select Resident(s)</label>
-              <select 
-                value={formData.resident_email} 
-                onChange={(e) => setFormData({...formData, resident_email: e.target.value})} 
-                required
-                className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
-              >
-                <option value="">-- Choose Target --</option>
-                <option value="ALL" className="font-bold text-blue-600">📢 Issue to ALL Residents</option>
-                {residents.map(r => (
-                  <option key={r.id} value={r.email}>Unit {r.unit_number} - {r.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex-[3]">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Description</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Monthly Maintenance Fee" 
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                required
-                className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-
-            <div className="flex-1">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Amount (RM)</label>
-              <input 
-                type="number" 
-                min="1"
-                step="0.01"
-                placeholder="0.00" 
-                value={formData.amount}
-                onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                required
-                className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 h-[46px]"
-            >
-              {isSubmitting ? 'Issuing...' : 'Issue Bill(s)'}
-            </button>
-          </form>
+      <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 lg:px-8 relative z-10">
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-black mb-2 tracking-tight">
+            {role === 'admin' ? 'Management Billing Portal' : 'My Billing & Invoices'}
+          </h1>
+          <p className="text-slate-600 font-medium">Manage invoices, payments, and electronic receipts in one place.</p>
         </div>
-      )}
 
-      {/* USER VIEW: PAY ALL BUTTON */}
-      {role === 'user' && pendingBills.length > 1 && (
-        <div className="flex justify-end mb-6">
-          <button 
-            onClick={() => { setPayingAll(true); setShowPaymentModal(true); }}
-            className="bg-emerald-500 text-white px-6 py-3 rounded-lg font-bold shadow hover:bg-emerald-600 transition-colors"
-          >
-            Pay All Pending (RM {totalPendingAmount.toFixed(2)})
-          </button>
-        </div>
-      )}
-
-      {/* SHARED VIEW: BILLS TABLE */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[700px]">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
-              <th className="p-4 font-semibold">Date Issued</th>
-              {role === 'admin' && <th className="p-4 font-semibold">Resident</th>}
-              <th className="p-4 font-semibold">Description</th>
-              <th className="p-4 font-semibold">Amount</th>
-              <th className="p-4 font-semibold">Status</th>
-              <th className="p-4 font-semibold text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bills.length === 0 ? (
-              <tr><td colSpan={6} className="p-8 text-center text-slate-500">No bills found.</td></tr>
-            ) : (
-              bills.map((bill) => (
-                <tr key={bill.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="p-4 text-slate-600 text-sm">{new Date(bill.issued_at).toLocaleDateString()}</td>
-                  
-                  {role === 'admin' && (
-                    <td className="p-4">
-                      <div className="font-bold text-slate-900">Unit {bill.unit_number}</div>
-                      <div className="text-xs text-slate-500">{bill.resident_name}</div>
-                    </td>
-                  )}
-                  
-                  <td className="p-4 font-bold text-slate-900">{bill.description}</td>
-                  <td className="p-4 font-bold text-blue-600">RM {parseFloat(bill.amount).toFixed(2)}</td>
-                  
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      bill.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                    }`}>
-                      {bill.status}
-                    </span>
-                  </td>
-
-                  <td className="p-4 text-right space-x-2">
-                    
-                    {bill.status === 'Pending' && role === 'user' && (
-                      <button 
-                        onClick={() => { setSelectedBill(bill); setPayingAll(false); setShowPaymentModal(true); }} 
-                        className="bg-emerald-500 text-white px-4 py-1.5 rounded-md font-bold text-xs hover:bg-emerald-600 transition-colors"
-                      >
-                        Pay Now
-                      </button>
-                    )}
-
-                    {bill.status === 'Paid' && (
-                      <button 
-                        onClick={() => { setSelectedBill(bill); setShowReceiptModal(true); }} 
-                        className="bg-slate-100 text-slate-700 border border-slate-200 px-4 py-1.5 rounded-md font-bold text-xs hover:bg-slate-200 transition-colors"
-                      >
-                        E-Receipt
-                      </button>
-                    )}
-
-                    {bill.status === 'Pending' && role === 'admin' && (
-                      <span className="text-slate-400 text-xs italic mr-2">Awaiting User</span>
-                    )}
-
-                    {role === 'admin' && (
-                      <button 
-                        onClick={() => handleDeleteBill(bill.id)} 
-                        className="bg-rose-100 text-rose-700 px-3 py-1.5 rounded-md font-bold text-xs hover:bg-rose-200 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* PAYMENT GATEWAY MODAL (USER ONLY) */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl">
-            <h2 className="text-2xl font-bold text-slate-900 mb-1">Secure Checkout</h2>
-            <p className="text-slate-500 text-sm mb-6">
-              {payingAll ? 'Bulk Payment for All Pending Bills' : selectedBill?.description}
-            </p>
+        {/* ADMIN VIEW: ISSUE BILL FORM */}
+        {role === 'admin' && (
+          <div className="bg-white/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] mb-8 transition-all hover:bg-white/50">
+            <h3 className="text-xl font-bold text-slate-900 mb-5">Issue New Bill</h3>
             
-            <div className="bg-slate-50 p-4 rounded-xl mb-6 text-center border border-slate-100">
-              <span className="text-slate-500 text-sm">Total Amount Due</span>
-              <h1 className="text-4xl font-extrabold text-blue-600 mt-1">
-                RM {payingAll ? totalPendingAmount.toFixed(2) : parseFloat(selectedBill?.amount).toFixed(2)}
-              </h1>
-            </div>
-
-            <form onSubmit={handlePayment} className="flex flex-col gap-4">
-              <input type="text" placeholder="Cardholder Name" required className="p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
-              <input type="text" placeholder="Card Number (Mock)" required className="p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
-              <div className="flex gap-4">
-                <input type="text" placeholder="MM/YY" required className="flex-1 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
-                <input type="text" placeholder="CVC" required className="flex-1 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
+            <form onSubmit={handleIssueBill} className="flex flex-col md:flex-row gap-5 md:items-end">
+              <div className="flex-[2]">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Select Resident(s)</label>
+                <select 
+                  value={formData.resident_email} 
+                  onChange={(e) => setFormData({...formData, resident_email: e.target.value})} 
+                  required
+                  className="w-full p-3 rounded-xl bg-white/50 border border-white/60 focus:bg-white/80 focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 transition-all shadow-sm"
+                >
+                  <option value="">-- Choose Target --</option>
+                  <option value="ALL" className="font-bold text-slate-900">📢 Issue to ALL Residents</option>
+                  {residents.map(r => (
+                    <option key={r.id} value={r.email}>Unit {r.unit_number} - {r.name}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className="flex gap-3 mt-4">
-                <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 p-3 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition-colors">Cancel</button>
-                <button type="submit" disabled={isProcessing} className="flex-[2] p-3 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-600 transition-colors disabled:opacity-70">
-                  {isProcessing ? 'Processing...' : 'Confirm Payment'}
-                </button>
+              <div className="flex-[3]">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Description</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Monthly Maintenance Fee" 
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  required
+                  className="w-full p-3 rounded-xl bg-white/50 border border-white/60 focus:bg-white/80 focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 transition-all shadow-sm"
+                />
               </div>
+
+              <div className="flex-1">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Amount (RM)</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  step="0.01"
+                  placeholder="0.00" 
+                  value={formData.amount}
+                  onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                  required
+                  className="w-full p-3 rounded-xl bg-white/50 border border-white/60 focus:bg-white/80 focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 transition-all shadow-sm"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-all transform hover:scale-105 shadow-[0_4px_12px_rgba(0,0,0,0.1)] disabled:opacity-70 disabled:transform-none h-[50px]"
+              >
+                {isSubmitting ? 'Issuing...' : 'Issue Bill(s)'}
+              </button>
             </form>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* E-RECEIPT MODAL (SHARED) */}
-      {showReceiptModal && selectedBill && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl">
-            
-            <div className="text-center mb-6">
-              <div className="text-5xl mb-3">✅</div>
-              <h2 className="text-2xl font-bold text-emerald-700">Payment Successful</h2>
-              <p className="text-slate-500 text-sm">Official E-Receipt</p>
-            </div>
+        {/* USER VIEW: PAY ALL BUTTON */}
+        {role === 'user' && pendingBills.length > 1 && (
+          <div className="flex justify-end mb-6">
+            <button 
+              onClick={() => { setPayingAll(true); setShowPaymentModal(true); }}
+              className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-black transition-all transform hover:scale-105"
+            >
+              Pay All Pending (RM {totalPendingAmount.toFixed(2)})
+            </button>
+          </div>
+        )}
 
-            <div className="border-y-2 border-dashed border-slate-200 py-6 mb-6 space-y-3">
-              <p className="flex justify-between text-sm"><span className="text-slate-500">Bill ID:</span> <strong className="text-slate-900">#INV-{selectedBill.id.toString().padStart(4, '0')}</strong></p>
-              <p className="flex justify-between text-sm"><span className="text-slate-500">Paid By:</span> <strong className="text-slate-900">Unit {selectedBill.unit_number}</strong></p>
-              <p className="flex justify-between text-sm"><span className="text-slate-500">Description:</span> <strong className="text-slate-900">{selectedBill.description}</strong></p>
-              <p className="flex justify-between text-sm"><span className="text-slate-500">Date Paid:</span> <strong className="text-slate-900">{new Date(selectedBill.paid_at).toLocaleString()}</strong></p>
-              
-              <div className="flex justify-between mt-4 pt-4 border-t border-slate-100">
-                <span className="text-slate-900 font-bold">Total Paid</span>
-                <span className="text-blue-600 font-extrabold text-lg">RM {parseFloat(selectedBill.amount).toFixed(2)}</span>
-              </div>
-            </div>
+        {/* SHARED VIEW: BILLS TABLE */}
+        <div className="bg-white/40 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-white/30 border-b border-white/50 text-sm text-slate-700">
+                  <th className="p-5 font-bold uppercase tracking-wider text-xs">Date Issued</th>
+                  {role === 'admin' && <th className="p-5 font-bold uppercase tracking-wider text-xs">Resident</th>}
+                  <th className="p-5 font-bold uppercase tracking-wider text-xs">Description</th>
+                  <th className="p-5 font-bold uppercase tracking-wider text-xs">Amount</th>
+                  <th className="p-5 font-bold uppercase tracking-wider text-xs">Status</th>
+                  <th className="p-5 font-bold uppercase tracking-wider text-xs text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bills.length === 0 ? (
+                  <tr><td colSpan={6} className="p-12 text-center text-slate-500 font-medium">No bills found.</td></tr>
+                ) : (
+                  bills.map((bill) => (
+                    <tr key={bill.id} className="border-b border-white/30 hover:bg-white/50 transition-colors">
+                      <td className="p-5 text-slate-700 text-sm font-medium">{new Date(bill.issued_at).toLocaleDateString()}</td>
+                      
+                      {role === 'admin' && (
+                        <td className="p-5">
+                          <div className="font-bold text-slate-900">Unit {bill.unit_number}</div>
+                          <div className="text-xs text-slate-600">{bill.resident_name}</div>
+                        </td>
+                      )}
+                      
+                      <td className="p-5 font-bold text-slate-900">{bill.description}</td>
+                      <td className="p-5 font-extrabold text-slate-900">RM {parseFloat(bill.amount).toFixed(2)}</td>
+                      
+                      <td className="p-5">
+                        <span className={`px-4 py-1.5 rounded-full text-xs font-bold border ${
+                          bill.status === 'Paid' 
+                            ? 'bg-emerald-500/20 text-emerald-800 border-emerald-500/30' 
+                            : 'bg-amber-500/20 text-amber-800 border-amber-500/30'
+                        }`}>
+                          {bill.status}
+                        </span>
+                      </td>
 
-            <div className="flex gap-3">
-              <button onClick={() => setShowReceiptModal(false)} className="flex-1 p-3 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200 transition-colors">Close</button>
-              <button onClick={() => window.print()} className="flex-1 p-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors flex justify-center items-center gap-2">
-                <span>🖨️</span> Print Receipt
-              </button>
-            </div>
+                      <td className="p-5 text-right space-x-3">
+                        
+                        {bill.status === 'Pending' && role === 'user' && (
+                          <button 
+                            onClick={() => { setSelectedBill(bill); setPayingAll(false); setShowPaymentModal(true); }} 
+                            className="bg-slate-900 text-white px-5 py-2 rounded-xl font-bold text-xs hover:bg-black transition-all transform hover:scale-105 shadow-sm"
+                          >
+                            Pay Now
+                          </button>
+                        )}
+
+                        {bill.status === 'Paid' && (
+                          <button 
+                            onClick={() => { setSelectedBill(bill); setShowReceiptModal(true); }} 
+                            className="bg-white/50 text-slate-800 border border-white/60 px-5 py-2 rounded-xl font-bold text-xs hover:bg-white transition-all shadow-sm"
+                          >
+                            E-Receipt
+                          </button>
+                        )}
+
+                        {bill.status === 'Pending' && role === 'admin' && (
+                          <span className="text-slate-500 text-xs italic font-medium mr-2">Awaiting User</span>
+                        )}
+
+                        {role === 'admin' && (
+                          <button 
+                            onClick={() => handleDeleteBill(bill.id)} 
+                            className="bg-rose-500/10 text-rose-700 border border-rose-500/20 px-4 py-2 rounded-xl font-bold text-xs hover:bg-rose-500/20 transition-all"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
 
+        {/* PAYMENT GATEWAY MODAL (USER ONLY) */}
+        {showPaymentModal && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex justify-center items-center z-50 p-4">
+            <div className="bg-white/90 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl border border-white/60">
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-1">Secure Checkout</h2>
+              <p className="text-slate-600 text-sm mb-6 font-medium">
+                {payingAll ? 'Bulk Payment for All Pending Bills' : selectedBill?.description}
+              </p>
+              
+              <div className="bg-white/50 p-6 rounded-2xl mb-6 text-center border border-white/60 shadow-inner">
+                <span className="text-slate-500 text-sm font-bold uppercase tracking-wide">Total Amount Due</span>
+                <h1 className="text-4xl font-extrabold text-slate-900 mt-2">
+                  RM {payingAll ? totalPendingAmount.toFixed(2) : parseFloat(selectedBill?.amount).toFixed(2)}
+                </h1>
+              </div>
+
+              <form onSubmit={handlePayment} className="flex flex-col gap-4">
+                <input type="text" placeholder="Cardholder Name" required className="p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm" />
+                <input type="text" placeholder="Card Number (Mock)" required className="p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm" />
+                <div className="flex gap-4">
+                  <input type="text" placeholder="MM/YY" required className="flex-1 p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm" />
+                  <input type="text" placeholder="CVC" required className="flex-1 p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm" />
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 p-3.5 bg-white/50 text-slate-700 border border-white/60 rounded-xl font-bold hover:bg-white transition-colors">Cancel</button>
+                  <button type="submit" disabled={isProcessing} className="flex-[2] p-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all transform hover:scale-105 disabled:opacity-70 disabled:transform-none shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+                    {isProcessing ? 'Processing...' : 'Confirm Payment'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* E-RECEIPT MODAL (SHARED) */}
+        {showReceiptModal && selectedBill && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex justify-center items-center z-50 p-4">
+            <div className="bg-white/90 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl border border-white/60">
+              
+              <div className="text-center mb-6">
+                <div className="text-5xl mb-4">✅</div>
+                <h2 className="text-2xl font-extrabold text-slate-900">Payment Successful</h2>
+                <p className="text-slate-500 text-sm font-medium mt-1">Official E-Receipt</p>
+              </div>
+
+              <div className="border-y-2 border-dashed border-slate-300 py-6 mb-6 space-y-4">
+                <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Bill ID:</span> <strong className="text-slate-900">#INV-{selectedBill.id.toString().padStart(4, '0')}</strong></p>
+                <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Paid By:</span> <strong className="text-slate-900">Unit {selectedBill.unit_number}</strong></p>
+                <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Description:</span> <strong className="text-slate-900">{selectedBill.description}</strong></p>
+                <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Date Paid:</span> <strong className="text-slate-900">{new Date(selectedBill.paid_at).toLocaleString()}</strong></p>
+                
+                <div className="flex justify-between items-center mt-6 pt-6 border-t border-slate-200">
+                  <span className="text-slate-900 font-bold uppercase text-xs tracking-wider">Total Paid</span>
+                  <span className="text-slate-900 font-extrabold text-2xl">RM {parseFloat(selectedBill.amount).toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setShowReceiptModal(false)} className="flex-1 p-3.5 bg-white/50 text-slate-700 border border-white/60 rounded-xl font-bold hover:bg-white transition-colors">Close</button>
+                <button onClick={() => window.print()} className="flex-[2] p-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all transform hover:scale-105 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex justify-center items-center gap-2">
+                  <span>🖨️</span> Print Receipt
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }

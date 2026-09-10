@@ -55,74 +55,84 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="text-slate-500 font-medium animate-pulse">Loading Live Statistics...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 flex justify-center items-center">
+        <div className="text-slate-600 font-medium animate-pulse text-lg">Loading Live Statistics...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 font-sans relative pb-12">
       
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">Admin Command Center</h1>
-        <p className="text-slate-500">Live overview of your residence system data.</p>
-      </div>
+      {/* Ambient Glows */}
+      <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/60 rounded-full mix-blend-overlay filter blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-slate-400/20 rounded-full mix-blend-multiply filter blur-[100px] pointer-events-none"></div>
 
-      {/* KPI STATS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Residents Card */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Residents</span>
-          <span className="text-4xl font-extrabold text-slate-900 my-3">{stats.totalResidents}</span>
-          <Link to="/residents" className="text-sm font-semibold text-blue-600 hover:text-blue-700 mt-auto inline-flex items-center">
-            View Directory <span className="ml-1">→</span>
-          </Link>
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-black mb-2 tracking-tight">
+            Admin Command Center
+          </h1>
+          <p className="text-slate-600 font-medium">Live overview of your residence system data.</p>
         </div>
 
-        {/* Units Card */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Registered Units</span>
-          <span className="text-4xl font-extrabold text-slate-900 my-3">{stats.totalUnits}</span>
-          <span className="text-sm text-slate-400 mt-auto">Database capacity</span>
+        {/* KPI STATS GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          
+          {/* Residents Card */}
+          <div className="bg-white/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col hover:bg-white/60 transition-all duration-300 group hover:-translate-y-1">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Total Residents</span>
+            <span className="text-5xl font-extrabold text-slate-900 my-3 tracking-tight">{stats.totalResidents}</span>
+            <Link to="/residents" className="text-sm font-bold text-slate-600 group-hover:text-black mt-auto inline-flex items-center transition-colors">
+              View Directory <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+            </Link>
+          </div>
+
+          {/* Units Card */}
+          <div className="bg-white/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col hover:bg-white/60 transition-all duration-300 group hover:-translate-y-1">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Registered Units</span>
+            <span className="text-5xl font-extrabold text-slate-900 my-3 tracking-tight">{stats.totalUnits}</span>
+            <span className="text-sm font-medium text-slate-500 mt-auto">Database capacity</span>
+          </div>
+
+          {/* Visitors Card */}
+          <div className="bg-white/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col hover:bg-white/60 transition-all duration-300 group hover:-translate-y-1">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Active Guests</span>
+            <span className="text-5xl font-extrabold text-emerald-600 my-3 tracking-tight">{stats.activeVisitors}</span>
+            <Link to="/guests" className="text-sm font-bold text-slate-600 group-hover:text-emerald-700 mt-auto inline-flex items-center transition-colors">
+              Manage Access <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+            </Link>
+          </div>
+
+          {/* Bills Card */}
+          <div className="bg-white/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col hover:bg-white/60 transition-all duration-300 group hover:-translate-y-1">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Pending Bills</span>
+            <span className="text-5xl font-extrabold text-rose-600 my-3 tracking-tight">{stats.pendingBills}</span>
+            <Link to="/bills" className="text-sm font-bold text-slate-600 group-hover:text-rose-700 mt-auto inline-flex items-center transition-colors">
+              View Finances <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+            </Link>
+          </div>
+
         </div>
 
-        {/* Visitors Card */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active/Pending Guests</span>
-          <span className="text-4xl font-extrabold text-emerald-500 my-3">{stats.activeVisitors}</span>
-          <Link to="/guests" className="text-sm font-semibold text-blue-600 hover:text-blue-700 mt-auto inline-flex items-center">
-            Manage Access <span className="ml-1">→</span>
-          </Link>
+        {/* QUICK ACTIONS SECTION */}
+        <div className="bg-white/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)]">
+          <h3 className="text-xl font-extrabold text-slate-900 mb-6">System Modules</h3>
+          <div className="flex flex-wrap gap-4">
+            <Link to="/facilities" className="bg-white/50 border border-white/60 px-6 py-4 rounded-2xl text-slate-800 font-bold hover:bg-white shadow-sm hover:shadow-md transition-all flex items-center gap-3 transform hover:-translate-y-0.5">
+              <span className="text-xl">🎾</span> Facilities
+            </Link>
+            <Link to="/parking" className="bg-white/50 border border-white/60 px-6 py-4 rounded-2xl text-slate-800 font-bold hover:bg-white shadow-sm hover:shadow-md transition-all flex items-center gap-3 transform hover:-translate-y-0.5">
+              <span className="text-xl">🚗</span> Parking
+            </Link>
+            <Link to="/contacts" className="bg-white/50 border border-white/60 px-6 py-4 rounded-2xl text-slate-800 font-bold hover:bg-white shadow-sm hover:shadow-md transition-all flex items-center gap-3 transform hover:-translate-y-0.5">
+              <span className="text-xl">📞</span> Contacts
+            </Link>
+          </div>
         </div>
 
-        {/* Bills Card */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending Bills</span>
-          <span className="text-4xl font-extrabold text-rose-500 my-3">{stats.pendingBills}</span>
-          <Link to="/bills" className="text-sm font-semibold text-blue-600 hover:text-blue-700 mt-auto inline-flex items-center">
-            View Finances <span className="ml-1">→</span>
-          </Link>
-        </div>
-
-      </div>
-
-      {/* QUICK ACTIONS SECTION */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">System Modules</h3>
-        <div className="flex flex-wrap gap-4">
-          <Link to="/facilities" className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center gap-2">
-            <span>🎾</span> Facilities
-          </Link>
-          <Link to="/parking" className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center gap-2">
-            <span>🚗</span> Parking
-          </Link>
-          <Link to="/contacts" className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center gap-2">
-            <span>📞</span> Contacts
-          </Link>
-        </div>
       </div>
     </div>
   );
