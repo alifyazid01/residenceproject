@@ -46,22 +46,16 @@ export default function NavBar() {
           <div className="hidden md:flex items-center space-x-4">
             
             {role === 'admin' ? (
-              <Link to="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">
-                📊 Dashboard
+              <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">
+                Home
               </Link>
             ) : (
-              <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">
-                🏠 Home
+              <Link to="/residents" className="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">
+                directory
               </Link>
             )}
-            
-            <Link to="/facilities" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Facilities</Link>
-            <Link to="/guests" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Guests</Link>
-            <Link to="/parking" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Parking</Link>
             <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Billing</Link>
-            <Link to="/residents" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Directory</Link>
             <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Contacts</Link>
-            
           </div>
 
           {/* Logout Button */}
