@@ -6,14 +6,13 @@ import Residents from './pages/residents';
 import Bills from './pages/bills'; 
 import NavBar from './components/NavBar';  
 import ProtectedRoute from './components/ProtectedRoute';
-import Guests from './pages/guests';
-import Facilities from './pages/facilities';
-import Parking from './pages/parking';
 import Contacts from './pages/contacts';
 import Register from './pages/register';
 import ForgotPassword from './pages/forgot-password';
 import UpdatePassword from './pages/update-password'
 import Landing from './pages/landing';;
+import OutstandingLedger from './pages/OutstandingLedger';
+import AuditExport from './pages/AuditExport';
 
 function App() {
   return (
@@ -40,7 +39,23 @@ function App() {
             </ProtectedRoute>
           } 
         /> 
+        <Route 
+          path="/outstanding" 
+          element={
+            <ProtectedRoute>
+              <OutstandingLedger />
+            </ProtectedRoute>
+          } 
+        />
         
+        <Route 
+          path="/audit" 
+          element={
+            <ProtectedRoute>
+              <AuditExport />
+            </ProtectedRoute>
+          } 
+        />
         {/* Resident / User Routes */}
         <Route 
           path="/residents" 
@@ -59,33 +74,6 @@ function App() {
             </ProtectedRoute>
           } 
         /> 
-
-        <Route 
-          path="/facilities" 
-          element={
-            <ProtectedRoute>
-              <Facilities />
-            </ProtectedRoute>
-          } 
-        />
-
-      <Route 
-          path="/guests" 
-          element={
-            <ProtectedRoute>
-              <Guests />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/parking" 
-          element={
-            <ProtectedRoute>
-              <Parking />
-            </ProtectedRoute>
-          } 
-        />
 
         <Route 
           path="/contacts" 

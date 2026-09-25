@@ -44,18 +44,20 @@ export default function NavBar() {
           
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-4">
-            
             {role === 'admin' ? (
-              <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">
-                Home
-              </Link>
+              <>
+                <Link to="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Dashboard</Link>
+                <Link to="/outstanding" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Outstanding</Link>
+                <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Billing Ops</Link>
+                <Link to="/audit" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Audit Export</Link>
+              </>
             ) : (
-              <Link to="/residents" className="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">
-                directory
-              </Link>
+              <>
+                <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">Home</Link>
+                <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">My Bills</Link>
+                <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Contacts</Link>
+              </>
             )}
-            <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Billing</Link>
-            <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Contacts</Link>
           </div>
 
           {/* Logout Button */}

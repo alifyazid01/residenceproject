@@ -18,7 +18,7 @@ export default function Bills() {
     amount: ''
   });
 
-  // User Payment Gateway State
+  // User Payment Gateway & Receipt State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState<any>(null);
@@ -69,6 +69,7 @@ export default function Bills() {
     setLoading(false);
   };
 
+  // --- ADMIN: ISSUE BILL ---
   const handleIssueBill = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -136,8 +137,31 @@ export default function Bills() {
     }
   };
 
+  // --- ADMIN: MANUALLY MARK AS PAID ---
+  const handleMarkAsPaid = async (billId: number) => {
+    if (!window.confirm("Confirm that management has received this payment via cash/bank transfer?")) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('bills')
+        .update({ status: 'Paid', paid_at: new Date().toISOString() })
+        .eq('id', billId)
+        .select();
+
+      if (error) throw error;
+      if (data) {
+        setBills(bills.map(b => b.id === billId ? data[0] : b));
+        setSelectedBill(data[0]);
+        setShowReceiptModal(true); // Pop up the receipt instantly for the admin to print
+      }
+    } catch (error: any) {
+      alert("Error processing payment: " + error.message);
+    }
+  };
+
+  // --- ADMIN: DELETE BILL ---
   const handleDeleteBill = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this bill? This action cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to void this bill? This action cannot be undone.")) return;
 
     try {
       const { error } = await supabase.from('bills').delete().eq('id', id);
@@ -148,6 +172,7 @@ export default function Bills() {
     }
   };
 
+  // --- USER: MOCK PAYMENT GATEWAY ---
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -206,9 +231,11 @@ export default function Bills() {
       <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-8">
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-black mb-2 tracking-tight">
-            {role === 'admin' ? 'Management Billing Portal' : 'My Billing & Invoices'}
+            {role === 'admin' ? 'Billing Operations' : 'My Billing & Invoices'}
           </h1>
-          <p className="text-slate-600 font-medium">Manage invoices, payments, and electronic receipts in one place.</p>
+          <p className="text-slate-600 font-medium">
+            {role === 'admin' ? 'Issue invoices, reconcile offline payments, and generate official receipts.' : 'Manage invoices, payments, and electronic receipts in one place.'}
+          </p>
         </div>
 
         {/* ADMIN VIEW: ISSUE BILL FORM */}
@@ -324,8 +351,9 @@ export default function Bills() {
                         </span>
                       </td>
 
-                      <td className="p-5 text-right space-x-3">
+                      <td className="p-5 text-right space-x-2">
                         
+                        {/* USER ACTION: Pay Now */}
                         {bill.status === 'Pending' && role === 'user' && (
                           <button 
                             onClick={() => { setSelectedBill(bill); setPayingAll(false); setShowPaymentModal(true); }} 
@@ -335,25 +363,33 @@ export default function Bills() {
                           </button>
                         )}
 
+                        {/* ADMIN ACTION: Manually Reconcile Payment */}
+                        {bill.status === 'Pending' && role === 'admin' && (
+                          <button 
+                            onClick={() => handleMarkAsPaid(bill.id)} 
+                            className="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-emerald-700 transition-all shadow-sm"
+                          >
+                            Mark Paid
+                          </button>
+                        )}
+
+                        {/* SHARED ACTION: View Receipt */}
                         {bill.status === 'Paid' && (
                           <button 
                             onClick={() => { setSelectedBill(bill); setShowReceiptModal(true); }} 
                             className="bg-white/50 text-slate-800 border border-white/60 px-5 py-2 rounded-xl font-bold text-xs hover:bg-white transition-all shadow-sm"
                           >
-                            E-Receipt
+                            {role === 'admin' ? 'Receipt' : 'E-Receipt'}
                           </button>
                         )}
 
-                        {bill.status === 'Pending' && role === 'admin' && (
-                          <span className="text-slate-500 text-xs italic font-medium mr-2">Awaiting User</span>
-                        )}
-
+                        {/* ADMIN ACTION: Void / Delete Bill */}
                         {role === 'admin' && (
                           <button 
                             onClick={() => handleDeleteBill(bill.id)} 
                             className="bg-rose-500/10 text-rose-700 border border-rose-500/20 px-4 py-2 rounded-xl font-bold text-xs hover:bg-rose-500/20 transition-all"
                           >
-                            Delete
+                            Void
                           </button>
                         )}
                       </td>
@@ -404,17 +440,20 @@ export default function Bills() {
         {showReceiptModal && selectedBill && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex justify-center items-center z-50 p-4">
             
-            {/* ADDED 'print-area' class here to target it for printing */}
             <div className="print-area bg-white/90 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl border border-white/60">
               
               <div className="text-center mb-6">
                 <div className="text-5xl mb-4">✅</div>
-                <h2 className="text-2xl font-extrabold text-slate-900">Payment Successful</h2>
-                <p className="text-slate-500 text-sm font-medium mt-1">Official E-Receipt</p>
+                <h2 className="text-2xl font-extrabold text-slate-900">
+                  {role === 'admin' ? 'Official Receipt' : 'Payment Successful'}
+                </h2>
+                <p className="text-slate-500 text-sm font-medium mt-1">
+                  {role === 'admin' ? 'Management Acknowledged Payment' : 'Official E-Receipt'}
+                </p>
               </div>
 
               <div className="border-y-2 border-dashed border-slate-300 py-6 mb-6 space-y-4">
-                <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Bill ID:</span> <strong className="text-slate-900">#INV-{selectedBill.id.toString().padStart(4, '0')}</strong></p>
+                <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Receipt No:</span> <strong className="text-slate-900">#REC-{selectedBill.id.toString().padStart(4, '0')}</strong></p>
                 <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Paid By:</span> <strong className="text-slate-900">Unit {selectedBill.unit_number}</strong></p>
                 <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Description:</span> <strong className="text-slate-900">{selectedBill.description}</strong></p>
                 <p className="flex justify-between text-sm"><span className="text-slate-500 font-medium">Date Paid:</span> <strong className="text-slate-900">{new Date(selectedBill.paid_at).toLocaleString()}</strong></p>
@@ -425,7 +464,6 @@ export default function Bills() {
                 </div>
               </div>
 
-              {/* ADDED 'print:hidden' class here so the buttons don't show up on the paper */}
               <div className="flex gap-3 mt-6 print:hidden">
                 <button onClick={() => setShowReceiptModal(false)} className="flex-1 p-3.5 bg-white/50 text-slate-700 border border-white/60 rounded-xl font-bold hover:bg-white transition-colors">Close</button>
                 <button onClick={() => window.print()} className="flex-[2] p-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all transform hover:scale-105 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex justify-center items-center gap-2">

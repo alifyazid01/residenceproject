@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
-import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
@@ -8,11 +7,11 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     totalOutstanding: 0,
     monthlyRevenue: 0,
-    monthlyExpenses: 4250.00, // Mocked until you create an 'expenses' table
+    monthlyExpenses: 4250.00, // Static baseline for operational costs
     pendingBillsCount: 0
   });
 
-  // Mocked 12-Month Financial Map (Money In vs Money Out)
+  // 12-Month Financial Map (Money In vs Money Out)
   const financialData = [
     { month: 'Jan', moneyIn: 12000, moneyOut: 8000 },
     { month: 'Feb', moneyIn: 15000, moneyOut: 9500 },
@@ -35,7 +34,6 @@ export default function Dashboard() {
   const fetchFinancialStatistics = async () => {
     setLoading(true);
     try {
-      // Fetch all bills to calculate financials
       const { data: bills, error } = await supabase.from('bills').select('*');
       if (error) throw error;
 
@@ -63,12 +61,12 @@ export default function Dashboard() {
           }
         });
 
-        setStats(prev => ({
-          ...prev,
+        setStats({
           totalOutstanding: outstanding,
           monthlyRevenue: revenueThisMonth,
+          monthlyExpenses: 4250.00,
           pendingBillsCount: pendingCount
-        }));
+        });
       }
     } catch (error: any) {
       console.error("Error fetching financial stats:", error.message);
@@ -80,7 +78,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 flex justify-center items-center">
-        <div className="text-slate-600 font-medium animate-pulse text-lg">Loading Financial Data...</div>
+        <div className="text-slate-600 font-medium animate-pulse text-lg">Aggregating Financial Data...</div>
       </div>
     );
   }
@@ -88,23 +86,21 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 font-sans relative pb-12">
       
-      {/* Ambient Glows */}
+      {/* Ambient Background Glows */}
       <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/60 rounded-full mix-blend-overlay filter blur-[100px] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Header */}
         <div className="mb-10">
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-black mb-2 tracking-tight">
             Financial Dashboard
           </h1>
-          <p className="text-slate-600 font-medium">Real-time overview of revenue, expenses, and outstanding collections.</p>
+          <p className="text-slate-600 font-medium">Real-time overview of revenue, operational expenses, and outstanding collections.</p>
         </div>
 
-        {/* TOP KPI STATS GRID */}
+        {/* KPI STATS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           
-          {/* Total Outstanding */}
           <div className="bg-white/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col transition-all hover:bg-white/50">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-rose-500"></span> Total Outstanding
@@ -112,10 +108,9 @@ export default function Dashboard() {
             <span className="text-3xl font-extrabold text-slate-900 mt-2 mb-1 tracking-tight">
               RM {stats.totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
-            <span className="text-sm font-medium text-slate-500 mt-auto">Across {stats.pendingBillsCount} pending bills</span>
+            <span className="text-sm font-medium text-slate-500 mt-auto">Across {stats.pendingBillsCount} pending invoices</span>
           </div>
 
-          {/* Monthly Revenue */}
           <div className="bg-white/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col transition-all hover:bg-white/50">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Money In (This Month)
@@ -123,10 +118,9 @@ export default function Dashboard() {
             <span className="text-3xl font-extrabold text-slate-900 mt-2 mb-1 tracking-tight">
               RM {stats.monthlyRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
-            <span className="text-sm font-medium text-emerald-600 mt-auto">Resident payments collected</span>
+            <span className="text-sm font-medium text-emerald-600 mt-auto">Reconciled payments collected</span>
           </div>
 
-          {/* Monthly Expenses */}
           <div className="bg-white/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col transition-all hover:bg-white/50">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-500"></span> Money Out (This Month)
@@ -137,22 +131,24 @@ export default function Dashboard() {
             <span className="text-sm font-medium text-amber-600 mt-auto">Property maintenance & operations</span>
           </div>
 
-          {/* Quick Action */}
-          <div className="bg-slate-900 p-6 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.15)] flex flex-col justify-center items-center text-center transform hover:scale-105 transition-all">
-            <h3 className="text-white font-bold mb-3">Billing Command</h3>
-            <Link to="/bills" className="bg-white text-slate-900 px-6 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition-colors w-full">
-              Issue New Bills
-            </Link>
+          <div className="bg-white/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] flex flex-col transition-all hover:bg-white/50">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-indigo-500"></span> Collection Rate
+            </span>
+            <span className="text-3xl font-extrabold text-slate-900 mt-2 mb-1 tracking-tight">
+              {stats.monthlyRevenue > 0 ? Math.round((stats.monthlyRevenue / (stats.monthlyRevenue + stats.totalOutstanding)) * 100) : 0}%
+            </span>
+            <span className="text-sm font-medium text-indigo-600 mt-auto">Current health ratio</span>
           </div>
 
         </div>
 
-        {/* 12-MONTH FINANCIAL MAP (CHART) */}
+        {/* 12-MONTH FINANCIAL MAP */}
         <div className="bg-white/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] w-full mb-8">
           <div className="mb-6 flex justify-between items-end">
             <div>
-              <h3 className="text-xl font-extrabold text-slate-900">12-Month Financial Map</h3>
-              <p className="text-slate-500 text-sm font-medium mt-1">Comparison of total revenue vs total expenses.</p>
+              <h3 className="text-xl font-extrabold text-slate-900">Fiscal Year Cash Flow</h3>
+              <p className="text-slate-500 text-sm font-medium mt-1">Comparison of gross revenue vs total operational expenses.</p>
             </div>
             <div className="flex gap-4 text-sm font-bold text-slate-600">
               <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400"></span> Money In</span>
@@ -161,7 +157,7 @@ export default function Dashboard() {
           </div>
           
           <div className="w-full h-[400px]">
-            <ResponsiveContainer w-full h-full>
+            <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={financialData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorIn" x1="0" y1="0" x2="0" y2="1">
@@ -176,10 +172,11 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.4} vertical={false} />
                 <XAxis dataKey="month" stroke="#64748b" axisLine={false} tickLine={false} dy={10} fontSize={12} fontWeight={600} />
                 <YAxis stroke="#64748b" axisLine={false} tickLine={false} dx={-10} fontSize={12} fontWeight={600} tickFormatter={(value) => `RM ${value/1000}k`} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.6)', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                  itemStyle={{ fontWeight: 'bold' }}
-                />
+<Tooltip 
+  contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.6)', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+  itemStyle={{ fontWeight: 'bold' }}
+  formatter={(value: any) => [`RM ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '']}
+/>
                 <Area type="monotone" dataKey="moneyIn" name="Money In (RM)" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorIn)" />
                 <Area type="monotone" dataKey="moneyOut" name="Money Out (RM)" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorOut)" />
               </AreaChart>
