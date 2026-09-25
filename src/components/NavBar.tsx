@@ -3,31 +3,39 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 
 export default function NavBar() {
-  const [role, setRole] = useState<string>('user');
+  const [role, setRole] = useState<string>('');
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    // 1. Fetch the role when the component mounts
+    const fetchUserRole = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setRole(session.user.user_metadata?.role || 'user');
+      }
+    };
     fetchUserRole();
-  }, []);
 
-  const fetchUserRole = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      const userRole = session.user.user_metadata?.role || 'user';
-      setRole(userRole);
-    }
-  };
+    // 2. Listen for live login/logout events to update the navbar instantly
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setRole(session.user.user_metadata?.role || 'user');
+      } else {
+        setRole('');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/welcome');
   };
 
-  // 1. Define the routes where the NavBar should be hidden
-   const hideNavBarPaths = ['/welcome', '/login', '/register', '/forgot-password'];
+  const hideNavBarPaths = ['/welcome', '/login', '/register', '/forgot-password'];
 
-  // 2. If the current URL is in that list, don't render the NavBar
   if (hideNavBarPaths.includes(location.pathname)) {
     return null;
   }
@@ -37,30 +45,47 @@ export default function NavBar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Logo Section */}
           <div className="flex-shrink-0 font-bold text-xl tracking-tight text-blue-400">
             ResidenceSystem
           </div>
           
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-4">
-            {role === 'admin' ? (
+          <div className="hidden md:flex items-center space-x-2">
+            
+            {/* Admin Links */}
+            {role === 'admin' && (
               <>
-                <Link to="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Dashboard</Link>
-                <Link to="/outstanding" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Outstanding</Link>
-                <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Billing Ops</Link>
-                <Link to="/audit" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Audit Export</Link>
-              </>
-            ) : (
-              <>
-                <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">Home</Link>
-                <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">My Bills</Link>
-                <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Contacts</Link>
+                <Link to="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                  Admin Dashboard
+                </Link>
+                <Link to="/outstanding" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                  Total Outstanding
+                </Link>
+                <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                  Billing Ops
+                </Link>
+                <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                  Contacts Edit
+                </Link>
+                <Link to="/audit" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                  Audit Export
+                </Link>
               </>
             )}
+
+            {/* User Links */}
+            {role === 'user' && (
+              <>
+                <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                  User Dashboard
+                </Link>
+                <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                  Contacts
+                </Link>
+              </>
+            )}
+
           </div>
 
-          {/* Logout Button */}
           <div>
             <button 
               onClick={handleLogout} 

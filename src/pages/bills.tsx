@@ -6,6 +6,9 @@ export default function Bills() {
   const [userEmail, setUserEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   
+  // Replace this with the actual management WhatsApp number (include country code, no + or spaces)
+  const ADMIN_WHATSAPP = "60123456789"; 
+  
   // Data states
   const [bills, setBills] = useState<any[]>([]);
   const [residents, setResidents] = useState<any[]>([]);
@@ -18,12 +21,9 @@ export default function Bills() {
     amount: ''
   });
 
-  // User Payment Gateway & Receipt State
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // Shared Receipt State
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState<any>(null);
-  const [payingAll, setPayingAll] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     fetchSessionAndData();
@@ -76,59 +76,42 @@ export default function Bills() {
 
     try {
       if (formData.resident_email === 'ALL') {
-        if (!residents || residents.length === 0) {
-          throw new Error("No residents found in the directory. Please add residents first.");
-        }
+        if (!residents || residents.length === 0) throw new Error("No residents found.");
         
-        const billsToInsert = residents.map(r => {
-           const safeUnit = r.unit_number ? String(r.unit_number) : 'N/A';
-           const safeName = r.name ? String(r.name) : (r.full_name ? String(r.full_name) : 'Resident');
-           const safeEmail = r.email ? String(r.email) : 'no-email@error.com';
-
-           return {
-             unit_number: safeUnit,
-             resident_name: safeName,
-             resident_email: safeEmail,
-             description: formData.description,
-             amount: parseFloat(formData.amount),
-             status: 'Pending'
-           };
-        });
+        const billsToInsert = residents.map(r => ({
+           unit_number: r.unit_number ? String(r.unit_number) : 'N/A',
+           resident_name: r.name ? String(r.name) : (r.full_name ? String(r.full_name) : 'Resident'),
+           resident_email: r.email ? String(r.email) : 'no-email@error.com',
+           description: formData.description,
+           amount: parseFloat(formData.amount),
+           status: 'Pending'
+        }));
 
         const { data, error } = await supabase.from('bills').insert(billsToInsert).select();
-        
         if (error) throw error;
-        
         if (data) {
           const updatedBills = [...data, ...bills].sort((a,b) => new Date(b.issued_at).getTime() - new Date(a.issued_at).getTime());
           setBills(updatedBills);
         }
         alert(`Successfully issued bills to all ${residents.length} residents!`);
-        
       } else {
         const resident = residents.find(r => r.email === formData.resident_email);
         if (!resident) throw new Error("Please select a valid resident.");
 
-        const safeUnit = resident.unit_number ? String(resident.unit_number) : 'N/A';
-        const safeName = resident.name ? String(resident.name) : (resident.full_name ? String(resident.full_name) : 'Resident');
-        const safeEmail = resident.email ? String(resident.email) : 'no-email@error.com';
-
         const singleBill = {
-            unit_number: safeUnit,
-            resident_name: safeName,
-            resident_email: safeEmail,
+            unit_number: resident.unit_number ? String(resident.unit_number) : 'N/A',
+            resident_name: resident.name ? String(resident.name) : (resident.full_name ? String(resident.full_name) : 'Resident'),
+            resident_email: resident.email ? String(resident.email) : 'no-email@error.com',
             description: formData.description,
             amount: parseFloat(formData.amount),
             status: 'Pending'
         };
 
         const { data, error } = await supabase.from('bills').insert([singleBill]).select();
-
         if (error) throw error;
         if (data) setBills([data[0], ...bills]);
         alert("Bill issued successfully!");
       }
-      
       setFormData({ resident_email: '', description: '', amount: '' });
     } catch (error: any) {
       alert("Error issuing bill: " + error.message);
@@ -140,7 +123,6 @@ export default function Bills() {
   // --- ADMIN: MANUALLY MARK AS PAID ---
   const handleMarkAsPaid = async (billId: number) => {
     if (!window.confirm("Confirm that management has received this payment via cash/bank transfer?")) return;
-    
     try {
       const { data, error } = await supabase
         .from('bills')
@@ -152,7 +134,7 @@ export default function Bills() {
       if (data) {
         setBills(bills.map(b => b.id === billId ? data[0] : b));
         setSelectedBill(data[0]);
-        setShowReceiptModal(true); // Pop up the receipt instantly for the admin to print
+        setShowReceiptModal(true); 
       }
     } catch (error: any) {
       alert("Error processing payment: " + error.message);
@@ -162,7 +144,6 @@ export default function Bills() {
   // --- ADMIN: DELETE BILL ---
   const handleDeleteBill = async (id: number) => {
     if (!window.confirm("Are you sure you want to void this bill? This action cannot be undone.")) return;
-
     try {
       const { error } = await supabase.from('bills').delete().eq('id', id);
       if (error) throw error;
@@ -172,49 +153,19 @@ export default function Bills() {
     }
   };
 
-  // --- USER: MOCK PAYMENT GATEWAY ---
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    setTimeout(async () => {
-      try {
-        if (payingAll) {
-          const pendingIds = pendingBills.map(b => b.id);
-          const { error } = await supabase
-            .from('bills')
-            .update({ status: 'Paid', paid_at: new Date().toISOString() })
-            .in('id', pendingIds);
-
-          if (error) throw error;
-
-          setBills(bills.map(b => pendingIds.includes(b.id) ? { ...b, status: 'Paid', paid_at: new Date().toISOString() } : b));
-          setShowPaymentModal(false);
-          setPayingAll(false);
-          alert("All pending bills have been successfully paid!");
-
-        } else {
-          const { error } = await supabase
-            .from('bills')
-            .update({ status: 'Paid', paid_at: new Date().toISOString() })
-            .eq('id', selectedBill.id);
-
-          if (error) throw error;
-
-          setBills(bills.map(b => b.id === selectedBill.id ? { ...b, status: 'Paid', paid_at: new Date().toISOString() } : b));
-          setShowPaymentModal(false);
-          setShowReceiptModal(true); 
-        }
-      } catch (error: any) {
-        alert("Payment failed: " + error.message);
-      } finally {
-        setIsProcessing(false);
-      }
-    }, 1500); 
+  // --- USER: WHATSAPP PAYMENT REDIRECTS ---
+  const handleWhatsAppPayment = (bill: any) => {
+    const text = `Hello Management, I would like to make a payment for Unit ${bill.unit_number}.%0A%0A*Description:* ${bill.description}%0A*Amount Due:* RM ${parseFloat(bill.amount).toFixed(2)}%0A%0APlease provide the bank transfer details.`;
+    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${text}`, '_blank');
   };
 
   const pendingBills = bills.filter(b => b.status === 'Pending');
   const totalPendingAmount = pendingBills.reduce((sum, b) => sum + parseFloat(b.amount), 0);
+
+  const handleWhatsAppPayAll = () => {
+    const text = `Hello Management, I would like to clear all my pending bills.%0A%0A*Total Amount Due:* RM ${totalPendingAmount.toFixed(2)}%0A%0APlease provide the bank transfer details.`;
+    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${text}`, '_blank');
+  };
 
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 flex justify-center items-center">
@@ -225,16 +176,15 @@ export default function Bills() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 font-sans relative pb-12">
       
-      {/* Ambient Glow */}
       <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/60 rounded-full mix-blend-overlay filter blur-[100px] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-8">
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-black mb-2 tracking-tight">
-            {role === 'admin' ? 'Billing Operations' : 'My Billing & Invoices'}
+            {role === 'admin' ? 'Billing Operations' : 'My Outstanding Bills'}
           </h1>
           <p className="text-slate-600 font-medium">
-            {role === 'admin' ? 'Issue invoices, reconcile offline payments, and generate official receipts.' : 'Manage invoices, payments, and electronic receipts in one place.'}
+            {role === 'admin' ? 'Issue invoices, reconcile offline payments, and generate official receipts.' : 'View your pending balances and contact management to settle payments.'}
           </p>
         </div>
 
@@ -297,14 +247,14 @@ export default function Bills() {
           </div>
         )}
 
-        {/* USER VIEW: PAY ALL BUTTON */}
+        {/* USER VIEW: PAY ALL VIA WHATSAPP */}
         {role === 'user' && pendingBills.length > 1 && (
           <div className="flex justify-end mb-6">
             <button 
-              onClick={() => { setPayingAll(true); setShowPaymentModal(true); }}
-              className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-black transition-all transform hover:scale-105"
+              onClick={handleWhatsAppPayAll}
+              className="bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-600 transition-all transform hover:scale-105 flex items-center gap-2"
             >
-              Pay All Pending (RM {totalPendingAmount.toFixed(2)})
+              <span>💬</span> Pay All Pending (RM {totalPendingAmount.toFixed(2)})
             </button>
           </div>
         )}
@@ -353,13 +303,13 @@ export default function Bills() {
 
                       <td className="p-5 text-right space-x-2">
                         
-                        {/* USER ACTION: Pay Now */}
+                        {/* USER ACTION: WhatsApp Pay */}
                         {bill.status === 'Pending' && role === 'user' && (
                           <button 
-                            onClick={() => { setSelectedBill(bill); setPayingAll(false); setShowPaymentModal(true); }} 
-                            className="bg-slate-900 text-white px-5 py-2 rounded-xl font-bold text-xs hover:bg-black transition-all transform hover:scale-105 shadow-sm"
+                            onClick={() => handleWhatsAppPayment(bill)} 
+                            className="bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-emerald-600 transition-all transform hover:scale-105 shadow-sm flex items-center gap-1.5 ml-auto"
                           >
-                            Pay Now
+                            <span>💬</span> Pay via WhatsApp
                           </button>
                         )}
 
@@ -400,41 +350,6 @@ export default function Bills() {
             </table>
           </div>
         </div>
-
-        {/* PAYMENT GATEWAY MODAL (USER ONLY) */}
-        {showPaymentModal && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex justify-center items-center z-50 p-4">
-            <div className="bg-white/90 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl border border-white/60">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-1">Secure Checkout</h2>
-              <p className="text-slate-600 text-sm mb-6 font-medium">
-                {payingAll ? 'Bulk Payment for All Pending Bills' : selectedBill?.description}
-              </p>
-              
-              <div className="bg-white/50 p-6 rounded-2xl mb-6 text-center border border-white/60 shadow-inner">
-                <span className="text-slate-500 text-sm font-bold uppercase tracking-wide">Total Amount Due</span>
-                <h1 className="text-4xl font-extrabold text-slate-900 mt-2">
-                  RM {payingAll ? totalPendingAmount.toFixed(2) : parseFloat(selectedBill?.amount).toFixed(2)}
-                </h1>
-              </div>
-
-              <form onSubmit={handlePayment} className="flex flex-col gap-4">
-                <input type="text" placeholder="Cardholder Name" required className="p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm" />
-                <input type="text" placeholder="Card Number (Mock)" required className="p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm" />
-                <div className="flex gap-4">
-                  <input type="text" placeholder="MM/YY" required className="flex-1 p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm" />
-                  <input type="text" placeholder="CVC" required className="flex-1 p-3.5 rounded-xl bg-white/50 border border-white/60 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none text-slate-800 font-medium shadow-sm" />
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 p-3.5 bg-white/50 text-slate-700 border border-white/60 rounded-xl font-bold hover:bg-white transition-colors">Cancel</button>
-                  <button type="submit" disabled={isProcessing} className="flex-[2] p-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all transform hover:scale-105 disabled:opacity-70 disabled:transform-none shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
-                    {isProcessing ? 'Processing...' : 'Confirm Payment'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {/* E-RECEIPT MODAL (SHARED) */}
         {showReceiptModal && selectedBill && (
