@@ -5,9 +5,9 @@ import { supabase } from '../supabase';
 export default function Home() {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Replace with the actual admin/management WhatsApp Business number (include country code, no + or spaces)
-  const ADMIN_WHATSAPP = "60123456789"; 
+  
+  // The Admin WhatsApp number for the Online Transfer flow (formatted for wa.me API)
+  const ADMIN_WHATSAPP = "60179812006"; 
 
   const [userStats, setUserStats] = useState({ 
     outstandingAmount: 0, 
@@ -63,7 +63,7 @@ export default function Home() {
   };
 
   const handleWhatsAppPayment = () => {
-    const text = `Hello Management, I would like to make a payment for Unit ${userStats.unit_number}.%0A%0A*Total Amount Due:* RM ${userStats.outstandingAmount.toFixed(2)}%0A%0APlease provide the bank transfer details.`;
+    const text = `Hello Management, I would like to make an online transfer for Unit ${userStats.unit_number}.%0A%0A*Total Amount Due:* RM ${userStats.outstandingAmount.toFixed(2)}%0A%0APlease provide the bank details.`;
     window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${text}`, '_blank');
   };
 
@@ -77,12 +77,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 font-sans relative overflow-x-hidden pb-20">
-      
       <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/60 rounded-full mix-blend-overlay filter blur-[100px] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 pt-12 sm:px-6 lg:px-8 relative z-10">
         
-        {/* RESIDENT VIEW */}
         {role === 'user' && (
           <div className="max-w-4xl mx-auto w-full text-center">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-black mb-3 tracking-tight">
@@ -99,40 +97,35 @@ export default function Home() {
               <div className="text-5xl font-extrabold text-slate-900 tracking-tight mb-2">
                 RM {userStats.outstandingAmount.toFixed(2)}
               </div>
+              
               {userStats.pendingCount > 0 ? (
-                <p className="text-rose-600 font-bold text-sm">
-                  You have {userStats.pendingCount} unpaid bill{userStats.pendingCount > 1 ? 's' : ''}.
-                </p>
+                <>
+                  <p className="text-rose-600 font-bold text-sm mb-6">
+                    You have {userStats.pendingCount} unpaid bill{userStats.pendingCount > 1 ? 's' : ''}.
+                  </p>
+                  <button 
+                    onClick={handleWhatsAppPayment}
+                    className="w-full bg-emerald-500 text-white py-3.5 rounded-xl font-bold hover:bg-emerald-600 transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    <span>💬</span> Pay via Online Transfer
+                  </button>
+                </>
               ) : (
                 <p className="text-emerald-600 font-bold text-sm">All caught up! No pending balances.</p>
-              )}
-              
-              {userStats.pendingCount > 0 && (
-                <button 
-                  onClick={handleWhatsAppPayment} 
-                  className="mt-6 w-full bg-emerald-500 text-white py-3.5 rounded-xl font-bold hover:bg-emerald-600 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                >
-                  <span>💬</span> Pay via WhatsApp
-                </button>
               )}
             </div>
 
             <div className="grid grid-cols-1 max-w-xs mx-auto">
               <Link to="/contacts" className="block group outline-none">
                 <div className="flex flex-col items-center justify-center p-8 aspect-square rounded-[2rem] bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] transition-all duration-300 hover:shadow-[0_16px_48px_0_rgba(0,0,0,0.1)] hover:bg-white/60 transform hover:-translate-y-2">
-                  <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300 drop-shadow-sm">
-                    📞
-                  </div>
-                  <h3 className="text-slate-900 font-bold text-sm sm:text-base tracking-wide">
-                    Management Contacts
-                  </h3>
+                  <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300 drop-shadow-sm">📞</div>
+                  <h3 className="text-slate-900 font-bold text-sm sm:text-base tracking-wide">Management Contacts</h3>
                 </div>
               </Link>
             </div>
           </div>
         )}
 
-        {/* ADMIN REDIRECT */}
         {role === 'admin' && (
           <div className="text-center py-20">
             <h2 className="text-2xl font-extrabold text-slate-900 mb-4">Welcome to the Operations Portal</h2>
@@ -141,7 +134,6 @@ export default function Home() {
             </Link>
           </div>
         )}
-
       </div>
     </div>
   );
