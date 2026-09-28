@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/home'; 
 import Dashboard from './pages/dashboard';
 import Login from './pages/login';
@@ -7,12 +7,12 @@ import Bills from './pages/bills';
 import NavBar from './components/NavBar';  
 import ProtectedRoute from './components/ProtectedRoute';
 import Contacts from './pages/contacts';
-import Register from './pages/register';
 import ForgotPassword from './pages/forgot-password';
 import UpdatePassword from './pages/update-password';
 import Landing from './pages/landing';
 import OutstandingLedger from './pages/OutstandingLedger';
 import AuditExport from './pages/AuditExport';
+import Announcements from './pages/announcements';
 
 function App() {
   return (
@@ -20,53 +20,23 @@ function App() {
       <NavBar /> 
       
       <Routes>
-        {/* === SHARED ROUTES (Both Admin & User) === */}
-        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} /> 
-        <Route path="/bills" element={<ProtectedRoute><Bills /></ProtectedRoute>} /> 
-        <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
-
-        {/* === ADMIN-ONLY ROUTES === */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        /> 
-        <Route 
-          path="/outstanding" 
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <OutstandingLedger />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/audit" 
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AuditExport />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* === RESIDENT-ONLY ROUTES === */}
-        <Route 
-          path="/residents" 
-          element={
-            <ProtectedRoute allowedRoles={['user']}>
-              <Residents />
-            </ProtectedRoute>
-          } 
-        /> 
-
         {/* === PUBLIC ROUTES (No Login Required) === */}
         <Route path="/welcome" element={<Landing />} />
-        <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} /> 
         <Route path="/forgot-password" element={<ForgotPassword />} /> 
         <Route path="/update-password" element={<UpdatePassword />} />
+        
+        {/* === USER ROUTES (Anonymous Access) === */}
+        <Route path="/" element={<Home />} /> 
+        <Route path="/contacts" element={<Contacts />} />
+        <Route path="/announcements" element={<Announcements />} />
+        {/* Placeholder for future module: <Route path="/announcements" element={<Announcements />} /> */}
+
+        {/* === ADMIN-ONLY ROUTES === */}
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><Dashboard /></ProtectedRoute>} /> 
+        <Route path="/outstanding" element={<ProtectedRoute allowedRoles={['admin']}><OutstandingLedger /></ProtectedRoute>} />
+        <Route path="/bills" element={<ProtectedRoute allowedRoles={['admin']}><Bills /></ProtectedRoute>} />
+        <Route path="/audit" element={<ProtectedRoute allowedRoles={['admin']}><AuditExport /></ProtectedRoute>} />
         
       </Routes>
     </Router>
