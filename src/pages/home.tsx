@@ -3,27 +3,56 @@ import { supabase } from '../supabase';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
-  const [availableUnits, setAvailableUnits] = useState<string[]>([]);
+  const [residents, setResidents] = useState<any[]>([]);
+  
+  // Cascading Dropdown States
+  const [selectedBlock, setSelectedBlock] = useState<string>('');
+  const [selectedFloor, setSelectedFloor] = useState<string>('');
   const [selectedUnit, setSelectedUnit] = useState<string>('');
   
   const [userStats, setUserStats] = useState({ outstandingAmount: 0, pendingCount: 0 });
 
   const ADMIN_WHATSAPP = "60179812006"; 
 
-  // 1. Fetch the list of all units to populate the dropdown
+  // 1. Fetch all residents to populate the dropdowns
   useEffect(() => {
-    const fetchUnits = async () => {
-      const { data } = await supabase.from('residents').select('unit_number').order('unit_number', { ascending: true });
+    const fetchResidents = async () => {
+      const { data } = await supabase.from('residents').select('*');
       if (data) {
-        const uniqueUnits = Array.from(new Set(data.map(r => r.unit_number))).filter(Boolean);
-        setAvailableUnits(uniqueUnits as string[]);
+        setResidents(data);
       }
       setLoading(false);
     };
-    fetchUnits();
+    fetchResidents();
   }, []);
 
-  // 2. When a user selects a unit, fetch their pending bills
+  // 2. Dynamic Dropdown Logic WITH Custom Sorting
+  const availableBlocks = Array.from(new Set(residents.map(r => r.unit_number?.split('-')[0]).filter(Boolean)))
+    .sort((a, b) => {
+      const numA = parseInt(a.replace('B', ''), 10);
+      const numB = parseInt(b.replace('B', ''), 10);
+      return numA - numB;
+    });
+  
+  const availableFloors = selectedBlock 
+    ? Array.from(new Set(residents
+        .filter(r => r.unit_number?.startsWith(`${selectedBlock}-`))
+        .map(r => r.unit_number?.split('-')[1])
+        .filter(Boolean)))
+        .sort((a, b) => {
+          if (a === 'G') return -1;
+          if (b === 'G') return 1;
+          return parseInt(a, 10) - parseInt(b, 10);
+        })
+    : [];
+    
+  const availableUnits = (selectedBlock && selectedFloor) 
+    ? residents
+        .filter(r => r.unit_number?.startsWith(`${selectedBlock}-${selectedFloor}-`))
+        .sort((a,b) => a.unit_number.localeCompare(b.unit_number)) 
+    : [];
+
+  // 3. When a fully specific unit is selected, fetch their pending bills
   useEffect(() => {
     if (!selectedUnit) {
       setUserStats({ outstandingAmount: 0, pendingCount: 0 });
@@ -66,19 +95,47 @@ export default function Home() {
           Select your unit number below to securely view your pending maintenance fees.
         </p>
 
-        {/* The Unit Dropdown List */}
-        <div className="mb-10 max-w-sm mx-auto">
+        {/* The Cascading Unit Dropdowns */}
+        <div className="mb-10 max-w-2xl mx-auto">
           <label className="block text-sm font-bold text-slate-500 uppercase tracking-widest mb-3">Select Your Unit</label>
-          <select 
-            value={selectedUnit}
-            onChange={(e) => setSelectedUnit(e.target.value)}
-            className="w-full p-4 rounded-2xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-0 outline-none text-slate-900 font-bold text-xl text-center cursor-pointer shadow-sm transition-all"
-          >
-            <option value="">-- Choose Unit --</option>
-            {availableUnits.map(unit => (
-              <option key={unit} value={unit}>Unit {unit}</option>
-            ))}
-          </select>
+          
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            
+            {/* Block Selection */}
+            <select 
+              value={selectedBlock}
+              onChange={(e) => { setSelectedBlock(e.target.value); setSelectedFloor(''); setSelectedUnit(''); }}
+              className="w-full sm:w-1/3 p-4 rounded-2xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-0 outline-none text-slate-900 font-bold text-lg text-center cursor-pointer shadow-sm transition-all"
+            >
+              <option value="">-- Block --</option>
+              {availableBlocks.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+
+            {/* Floor Selection */}
+            <select 
+              value={selectedFloor}
+              onChange={(e) => { setSelectedFloor(e.target.value); setSelectedUnit(''); }}
+              disabled={!selectedBlock}
+              className="w-full sm:w-1/3 p-4 rounded-2xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-0 outline-none text-slate-900 font-bold text-lg text-center cursor-pointer shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">-- Floor --</option>
+              {availableFloors.map(f => <option key={f} value={f}>Floor {f}</option>)}
+            </select>
+
+            {/* Unit Selection */}
+            <select 
+              value={selectedUnit}
+              onChange={(e) => setSelectedUnit(e.target.value)}
+              disabled={!selectedFloor}
+              className="w-full sm:w-1/3 p-4 rounded-2xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-0 outline-none text-slate-900 font-bold text-lg text-center cursor-pointer shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">-- Unit --</option>
+              {availableUnits.map(u => (
+                <option key={u.id} value={u.unit_number}>{u.unit_number.split('-')[2]}</option>
+              ))}
+            </select>
+
+          </div>
         </div>
 
         {/* Dynamic Outstanding Display */}
