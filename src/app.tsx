@@ -2,12 +2,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './pages/home'; 
 import Dashboard from './pages/dashboard';
 import Login from './pages/login';
-import Residents from './pages/residents'; 
 import Bills from './pages/bills'; 
 import NavBar from './components/NavBar';  
 import ProtectedRoute from './components/ProtectedRoute';
 import Contacts from './pages/contacts';
-import ForgotPassword from './pages/forgot-password';
 import UpdatePassword from './pages/update-password';
 import Landing from './pages/landing';
 import OutstandingLedger from './pages/OutstandingLedger';
@@ -23,7 +21,6 @@ function App() {
         {/* === PUBLIC ROUTES (No Login Required) === */}
         <Route path="/welcome" element={<Landing />} />
         <Route path="/login" element={<Login />} /> 
-        <Route path="/forgot-password" element={<ForgotPassword />} /> 
         <Route path="/update-password" element={<UpdatePassword />} />
         
         {/* === USER ROUTES (Anonymous Access) === */}
