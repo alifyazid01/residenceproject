@@ -11,6 +11,7 @@ import Landing from './pages/landing';
 import OutstandingLedger from './pages/OutstandingLedger';
 import AuditExport from './pages/AuditExport';
 import Announcements from './pages/announcements';
+import Expenses from './pages/expenses';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="/outstanding" element={<ProtectedRoute allowedRoles={['admin']}><OutstandingLedger /></ProtectedRoute>} />
         <Route path="/bills" element={<ProtectedRoute allowedRoles={['admin']}><Bills /></ProtectedRoute>} />
         <Route path="/audit" element={<ProtectedRoute allowedRoles={['admin']}><AuditExport /></ProtectedRoute>} />
+        <Route path="/expenses" element={<Expenses />} />
         
       </Routes>
     </Router>

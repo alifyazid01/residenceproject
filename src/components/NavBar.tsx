@@ -97,6 +97,7 @@ export default function NavBar() {
                 <Link to="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Admin Dashboard</Link>
                 <Link to="/outstanding" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Total Outstanding</Link>
                 <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Billing Ops</Link>
+                <Link to="/expenses" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Money Out</Link>
                 <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Contacts Edit</Link>
                 <Link to="/audit" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Audit Export</Link>
                 <Link to="/announcements" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5">
@@ -160,6 +161,7 @@ export default function NavBar() {
                 <Link onClick={closeMobileMenu} to="/dashboard" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Admin Dashboard</Link>
                 <Link onClick={closeMobileMenu} to="/outstanding" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Total Outstanding</Link>
                 <Link onClick={closeMobileMenu} to="/bills" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Billing Ops</Link>
+                <Link onClick={closeMobileMenu} to="/expenses" className="px-3 py-2 rounded-md text-sm font-medium text-rose-300 hover:text-white hover:bg-slate-800 transition-colors">Money Out</Link>
                 <Link onClick={closeMobileMenu} to="/contacts" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Contacts Edit</Link>
                 <Link onClick={closeMobileMenu} to="/audit" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Audit Export</Link>
                 <Link onClick={closeMobileMenu} to="/announcements" className="flex items-center justify-between px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">
