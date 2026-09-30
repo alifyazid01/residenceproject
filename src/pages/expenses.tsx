@@ -12,6 +12,10 @@ export default function Expenses() {
     date_incurred: new Date().toISOString().split('T')[0]
   });
 
+  // --- RECEIPT / VOUCHER STATES ---
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<any>(null);
+
   useEffect(() => {
     fetchExpenses();
   }, []);
@@ -28,8 +32,8 @@ export default function Expenses() {
     setIsSubmitting(true);
     try {
       const payload = {
-        category: 'General Expense', // Invisibly handles the database requirement
-        description: formData.purpose, // Maps your text box to the description column
+        category: 'General Expense',
+        description: formData.purpose,
         amount: parseFloat(formData.amount),
         date_incurred: formData.date_incurred
       };
@@ -64,7 +68,7 @@ export default function Expenses() {
         
         <div className="mb-8">
           <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">Money Out (Expenses)</h1>
-          <p className="text-slate-600 font-medium">Record outgoing payments and operational costs.</p>
+          <p className="text-slate-600 font-medium">Record outgoing payments and print official payment vouchers.</p>
         </div>
 
         {/* RECORD EXPENSE FORM */}
@@ -136,8 +140,19 @@ export default function Expenses() {
                       <td className="p-5 text-slate-700 text-sm font-medium">{new Date(expense.date_incurred).toLocaleDateString()}</td>
                       <td className="p-5 font-bold text-slate-900">{expense.description}</td>
                       <td className="p-5 font-extrabold text-rose-600">RM {parseFloat(expense.amount).toFixed(2)}</td>
-                      <td className="p-5 text-right">
-                        <button onClick={() => handleDeleteExpense(expense.id)} className="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold text-xs hover:bg-slate-300 transition-all shadow-sm">Void</button>
+                      <td className="p-5 text-right flex justify-end gap-2">
+                        <button 
+                          onClick={() => { setSelectedExpense(expense); setShowReceiptModal(true); }} 
+                          className="bg-white/50 text-slate-800 border border-white/60 px-4 py-2 rounded-xl font-bold text-xs hover:bg-white transition-all shadow-sm"
+                        >
+                          Voucher
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteExpense(expense.id)} 
+                          className="bg-rose-50 text-rose-600 border border-rose-100 px-4 py-2 rounded-xl font-bold text-xs hover:bg-rose-100 transition-all shadow-sm"
+                        >
+                          Void
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -146,6 +161,74 @@ export default function Expenses() {
             </table>
           </div>
         </div>
+
+        {/* PAYMENT VOUCHER MODAL */}
+        {showReceiptModal && selectedExpense && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex justify-center items-center z-50 p-4">
+            <style>{`
+              @media print {
+                body * { visibility: hidden; }
+                #voucher-print-area, #voucher-print-area * { visibility: visible; }
+                #voucher-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; box-shadow: none !important; max-height: none !important; overflow: visible !important; }
+              }
+            `}</style>
+
+            <div id="voucher-print-area" className="bg-white p-8 sm:p-12 w-full max-w-2xl shadow-2xl text-black font-sans relative border-t-8 border-rose-600 print:border-t-8 print:border-rose-600 max-h-[90vh] overflow-y-auto">
+              
+              <div className="flex justify-between items-start border-b-[1.5px] border-black pb-6 mb-8">
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-serif font-bold tracking-wider uppercase">Payment Voucher</h2>
+                  <p className="text-sm font-medium uppercase tracking-wide mt-2 text-slate-600">Residence Management System</p>
+                </div>
+                <div className="text-right flex flex-col gap-3">
+                  <div className="flex items-center justify-end gap-3">
+                    <span className="text-sm font-medium uppercase tracking-wide">Voucher No:</span>
+                    <span className="font-bold border-b-[1.5px] border-black pb-1 w-28 text-center text-lg">PV-{selectedExpense.id.toString().padStart(4, '0')}</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-3">
+                    <span className="text-sm font-medium uppercase tracking-wide">Date:</span>
+                    <span className="font-bold border-b-[1.5px] border-black pb-1 w-28 text-center text-lg">{new Date(selectedExpense.date_incurred).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-8 mb-12 mt-10">
+                <div className="flex gap-4 items-end">
+                  <span className="text-sm font-bold uppercase tracking-wide whitespace-nowrap text-slate-600">Payment For:</span>
+                  <div className="border-b-[1.5px] border-black w-full pb-1 px-2 font-bold text-lg text-slate-900">
+                    {selectedExpense.description}
+                  </div>
+                </div>
+                
+                <div className="flex gap-4 items-end">
+                  <span className="text-sm font-bold uppercase tracking-wide whitespace-nowrap text-slate-600">Amount Paid:</span>
+                  <div className="border-b-[1.5px] border-black w-full pb-1 px-2 font-extrabold text-2xl text-rose-600">
+                    RM {parseFloat(selectedExpense.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  </div>
+                </div>
+              </div>
+
+              {/* Signature Lines */}
+              <div className="flex justify-between mt-24 pt-8">
+                <div className="w-5/12 text-center border-t-[1.5px] border-black pt-2">
+                  <span className="text-sm font-bold uppercase tracking-widest text-slate-600">Prepared By</span>
+                </div>
+                <div className="w-5/12 text-center border-t-[1.5px] border-black pt-2">
+                  <span className="text-sm font-bold uppercase tracking-widest text-slate-600">Approved By</span>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-4 sm:-bottom-20 left-0 right-0 flex justify-center gap-4 print:hidden pb-8 sm:pb-0">
+                <button onClick={() => setShowReceiptModal(false)} className="px-6 py-3 bg-white text-slate-800 border-2 border-slate-300 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-sm">
+                  Close
+                </button>
+                <button onClick={() => window.print()} className="px-8 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-colors shadow-md flex items-center gap-2">
+                  🖨️ Print Voucher
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
