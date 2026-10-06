@@ -27,10 +27,13 @@ export default function ProtectedRoute({
     return () => subscription.unsubscribe();
   }, []);
 
-  if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Verifying access...</div>;
+if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center bg-neutral-50 font-bold uppercase tracking-widest text-black text-sm">
+        Verifying Access...
+      </div>
+    );
   }
-
   // 1. Check if logged in
   if (!session) {
     return <Navigate to="/welcome" replace />;

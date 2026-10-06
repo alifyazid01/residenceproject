@@ -2,35 +2,35 @@ import { Link } from 'react-router-dom';
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4 overflow-x-hidden">
-      <div className="max-w-3xl w-full text-center">
+    <div className="min-h-screen bg-neutral-50 flex flex-col justify-center items-center p-6 font-sans">
+      <div className="max-w-4xl w-full text-center">
         
-        {/* Scaled down base text to text-4xl to prevent mobile overflow */}
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-white mb-4 sm:mb-6 tracking-tight break-words">
-          Residence<span className="text-blue-500">System</span>
+        {/* Massive, tight typography synonymous with premium athletic brands */}
+        <h1 className="text-6xl sm:text-5xl md:text-9xl font-black text-black uppercase tracking-tighter mb-4">
+          KEKWA RESIDENCE.
         </h1>
-        <p className="text-slate-400 text-base sm:text-lg mb-8 sm:mb-12 px-2">
-          Please select your access portal below.
+        <p className="text-neutral-500 text-sm sm:text-base font-bold uppercase tracking-widest mb-16">
+          System Access Portal // Select Your Path
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto w-full">
           
-          {/* User Portal */}
-          <Link to="/" className="group bg-slate-800 border border-slate-700 p-6 sm:p-10 rounded-3xl hover:bg-slate-700 transition-all flex flex-col items-center mx-2 sm:mx-0 shadow-lg">
-            <div className="text-5xl sm:text-6xl mb-4 sm:mb-6 group-hover:scale-110 transition-transform">🏘️</div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Resident Portal</h2>
-            <p className="text-slate-400 text-xs sm:text-sm px-2">
-              View outstanding balances, announcements, and JMB contacts without logging in.
+          {/* User Portal - High Contrast Outline */}
+          <Link to="/" className="group bg-transparent border-2 border-black p-10 sm:p-14 hover:bg-black transition-colors duration-300 flex flex-col items-center">
+            <h2 className="text-2xl font-black text-black group-hover:text-white uppercase tracking-tight mb-3 transition-colors">Resident</h2>
+            <p className="text-neutral-500 group-hover:text-neutral-300 text-xs font-bold uppercase tracking-widest transition-colors text-center">
+              View Balances & Reports
             </p>
+            <div className="mt-8 w-12 h-1 bg-black group-hover:bg-white transition-colors"></div>
           </Link>
 
-          {/* Admin Portal */}
-          <Link to="/login" className="group bg-blue-600 border border-blue-500 p-6 sm:p-10 rounded-3xl hover:bg-blue-500 transition-all flex flex-col items-center mx-2 sm:mx-0 shadow-lg">
-            <div className="text-5xl sm:text-6xl mb-4 sm:mb-6 group-hover:scale-110 transition-transform">🔐</div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Admin Portal</h2>
-            <p className="text-blue-100 text-xs sm:text-sm px-2">
-              Secure management login for billing, auditing, and announcements.
+          {/* Admin Portal - Solid Black */}
+          <Link to="/login" className="group bg-transparent border-2 border-black p-10 sm:p-14 hover:bg-neutral-800 transition-colors duration-300 flex flex-col items-center">
+            <h2 className="text-2xl font-black text-black group-hover:text-white uppercase tracking-tight mb-3 transition-colors">Admin</h2>
+            <p className="text-neutral-500 group-hover:text-neutral-300 text-xs font-bold uppercase tracking-widest transition-colors text-center">
+              System Management
             </p>
+            <div className="mt-8 w-12 h-1 bg-black group-hover:bg-white transition-colors"></div>
           </Link>
 
         </div>

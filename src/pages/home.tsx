@@ -5,7 +5,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [residents, setResidents] = useState<any[]>([]);
   
-  // Cascading Dropdown States
   const [selectedBlock, setSelectedBlock] = useState<string>('');
   const [selectedFloor, setSelectedFloor] = useState<string>('');
   const [selectedUnit, setSelectedUnit] = useState<string>('');
@@ -70,7 +69,6 @@ export default function Home() {
     fetchUnitBills();
   }, [selectedUnit]);
 
-  // Group pending bills by year for the invoice
   const invoiceItems = useMemo(() => {
     if (!pendingBills.length) return [];
     
@@ -87,7 +85,7 @@ export default function Home() {
         description: `Maintenance Fee (${year})`,
         amount: grouped[year]
       }))
-      .sort((a, b) => parseInt(b.year) - parseInt(a.year)); // Newest first
+      .sort((a, b) => parseInt(b.year) - parseInt(a.year));
   }, [pendingBills]);
 
   const residentName = useMemo(() => {
@@ -100,129 +98,124 @@ export default function Home() {
     window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${text}`, '_blank');
   };
 
-  if (loading) return <div className="min-h-screen flex justify-center items-center bg-slate-100">Loading portal...</div>;
+  if (loading) return <div className="min-h-screen flex justify-center items-center bg-neutral-50 font-bold uppercase tracking-widest text-black">Loading Portal...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 font-sans relative pb-20 pt-12 px-4">
-      <div className="max-w-3xl mx-auto text-center relative z-10">
+    <div className="min-h-screen bg-neutral-50 font-sans pb-24 pt-12 px-4 relative">
+      <div className="max-w-4xl mx-auto text-center">
         
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-3 tracking-tight">Check Outstanding Balance</h1>
-        <p className="text-slate-600 font-medium mb-12 text-lg">Select your unit number below to securely view your pending maintenance fees.</p>
+        <h1 className="text-5xl sm:text-7xl font-black text-black tracking-tighter uppercase mb-4">Resident Portal.</h1>
+        <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs mb-16">Select Unit // View Balances</p>
 
-        {/* Dropdowns */}
-        <div className="mb-10 max-w-2xl mx-auto">
-          <label className="block text-sm font-bold text-slate-500 uppercase tracking-widest mb-3">Select Your Unit</label>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <select value={selectedBlock} onChange={(e) => { setSelectedBlock(e.target.value); setSelectedFloor(''); setSelectedUnit(''); }} className="w-full sm:w-1/3 p-4 rounded-2xl bg-white border-2 border-slate-300 focus:border-slate-900 outline-none text-slate-900 font-bold text-lg text-center shadow-sm">
-              <option value="">-- Block --</option>
-              {availableBlocks.map(b => <option key={b} value={b}>{b}</option>)}
+        {/* Dropdowns - Sharp, Architectural */}
+        <div className="mb-12 max-w-2xl mx-auto">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <select value={selectedBlock} onChange={(e) => { setSelectedBlock(e.target.value); setSelectedFloor(''); setSelectedUnit(''); }} className="w-full sm:w-1/3 p-5 bg-transparent border-2 border-black outline-none text-black font-bold uppercase tracking-widest text-sm transition-colors rounded-none cursor-pointer focus:bg-black focus:text-white">
+              <option value="" className="bg-white text-black">BLOCK</option>
+              {availableBlocks.map(b => <option key={b} value={b} className="bg-white text-black">{b}</option>)}
             </select>
-            <select value={selectedFloor} onChange={(e) => { setSelectedFloor(e.target.value); setSelectedUnit(''); }} disabled={!selectedBlock} className="w-full sm:w-1/3 p-4 rounded-2xl bg-white border-2 border-slate-300 focus:border-slate-900 outline-none text-slate-900 font-bold text-lg text-center shadow-sm disabled:opacity-50">
-              <option value="">-- Floor --</option>
-              {availableFloors.map(f => <option key={f} value={f}>Floor {f}</option>)}
+            <select value={selectedFloor} onChange={(e) => { setSelectedFloor(e.target.value); setSelectedUnit(''); }} disabled={!selectedBlock} className="w-full sm:w-1/3 p-5 bg-transparent border-2 border-black outline-none text-black font-bold uppercase tracking-widest text-sm transition-colors rounded-none disabled:opacity-30 cursor-pointer focus:bg-black focus:text-white">
+              <option value="" className="bg-white text-black">FLOOR</option>
+              {availableFloors.map(f => <option key={f} value={f} className="bg-white text-black">{f}</option>)}
             </select>
-            <select value={selectedUnit} onChange={(e) => setSelectedUnit(e.target.value)} disabled={!selectedFloor} className="w-full sm:w-1/3 p-4 rounded-2xl bg-white border-2 border-slate-300 focus:border-slate-900 outline-none text-slate-900 font-bold text-lg text-center shadow-sm disabled:opacity-50">
-              <option value="">-- Unit --</option>
-              {availableUnits.map(u => <option key={u.id} value={u.unit_number}>{u.unit_number.split('-')[2]}</option>)}
+            <select value={selectedUnit} onChange={(e) => setSelectedUnit(e.target.value)} disabled={!selectedFloor} className="w-full sm:w-1/3 p-5 bg-transparent border-2 border-black outline-none text-black font-bold uppercase tracking-widest text-sm transition-colors rounded-none disabled:opacity-30 cursor-pointer focus:bg-black focus:text-white">
+              <option value="" className="bg-white text-black">UNIT</option>
+              {availableUnits.map(u => <option key={u.id} value={u.unit_number} className="bg-white text-black">{u.unit_number.split('-')[2]}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Display */}
+        {/* Display Panel */}
         {selectedUnit && (
-          <div className="bg-white/60 backdrop-blur-2xl p-10 rounded-[2rem] border border-white shadow-xl transform transition-all animate-fade-in">
-            <span className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2 block">Total Outstanding for Unit {selectedUnit}</span>
-            <div className="text-6xl font-extrabold text-slate-900 tracking-tight mb-4">
+          <div className="bg-white p-12 sm:p-16 border-2 border-black animate-fade-in max-w-2xl mx-auto">
+            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-4 block border-b-2 border-black pb-4">Outstanding Balance // Unit {selectedUnit}</span>
+            <div className="text-6xl sm:text-8xl font-black text-black tracking-tighter mb-8 mt-8">
               RM {userStats.outstandingAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
             </div>
             
             {userStats.pendingCount > 0 ? (
               <>
-                <p className="text-rose-600 font-bold mb-8">You have {userStats.pendingCount} unpaid bill{userStats.pendingCount > 1 ? 's' : ''}.</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-                  <button onClick={() => setShowInvoice(true)} className="flex-1 bg-white text-slate-800 border-2 border-slate-300 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center gap-2">
-                    📄 View Invoice
+                <p className="text-red-600 font-bold uppercase tracking-widest text-xs mb-10">{userStats.pendingCount} UNPAID BILLS FOUND</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button onClick={() => setShowInvoice(true)} className="flex-1 bg-transparent text-black border-2 border-black py-4 px-6 font-bold uppercase tracking-widest text-xs hover:bg-neutral-100 transition-colors">
+                    View Invoice
                   </button>
-                  <button onClick={handleWhatsAppPayment} className="flex-[1.5] bg-emerald-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-emerald-600 transition-all shadow-md flex items-center justify-center gap-2">
-                    💬 Pay Online
+                  <button onClick={handleWhatsAppPayment} className="flex-[1.5] bg-black text-white py-4 px-6 font-bold uppercase tracking-widest text-xs hover:bg-neutral-800 transition-colors">
+                    Pay Online
                   </button>
                 </div>
               </>
             ) : (
-              <p className="text-emerald-600 font-bold text-lg">All caught up! No pending balances.</p>
+              <p className="text-black font-black uppercase tracking-widest text-lg border-t-2 border-black pt-8">No pending balances.</p>
             )}
           </div>
         )}
 
         {/* INVOICE MODAL */}
         {showInvoice && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex justify-center items-center z-50 p-4">
+          <div className="fixed inset-0 bg-neutral-900/80 flex justify-center items-center z-50 p-4">
             <style>{`
               @media print {
                 body * { visibility: hidden; }
                 #invoice-print-area, #invoice-print-area * { visibility: visible; }
-                #invoice-print-area { 
-                  position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; 
-                  box-shadow: none !important; max-height: none !important; overflow: visible !important; 
-                }
+                #invoice-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 40px; box-shadow: none !important; max-height: none !important; overflow: visible !important; }
               }
             `}</style>
             
-            {/* Added max-h-[90vh] and overflow-y-auto to this div! */}
-            <div id="invoice-print-area" className="bg-white p-8 sm:p-12 w-full max-w-2xl border border-slate-200 shadow-2xl text-slate-900 font-sans relative rounded-2xl print:border-none print:rounded-none text-left max-h-[90vh] overflow-y-auto">
+            <div id="invoice-print-area" className="bg-white p-8 sm:p-16 w-full max-w-3xl border-2 border-black text-black font-sans relative max-h-[90vh] overflow-y-auto text-left rounded-none">
               
-              <div className="flex justify-between items-start border-b-4 border-slate-900 pb-6 mb-8">
+              <div className="flex justify-between items-start border-b-4 border-black pb-8 mb-12 mt-4">
                 <div>
-                  <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900">INVOICE</h2>
-                  <p className="text-slate-500 font-bold mt-2 tracking-widest uppercase text-sm">Outstanding Balance</p>
+                  <h2 className="text-5xl sm:text-7xl font-black tracking-tighter uppercase">Invoice.</h2>
+                  <p className="text-neutral-500 font-bold mt-2 tracking-widest uppercase text-xs">Outstanding Balance Statement</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1">Date Issued</p>
-                  <p className="font-bold text-lg">{new Date().toLocaleDateString()}</p>
+                  <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1">Date Issued</p>
+                  <p className="font-black text-lg">{new Date().toLocaleDateString()}</p>
                 </div>
               </div>
 
-              <div className="flex justify-between items-end mb-8 bg-slate-50 p-6 rounded-xl border border-slate-200 print:bg-transparent print:p-0 print:border-none">
+              <div className="flex justify-between items-end mb-12">
                 <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Billed To</p>
-                  <p className="font-extrabold text-xl text-slate-900">{residentName}</p>
-                  <p className="font-bold text-slate-600 mt-1">Unit {selectedUnit}</p>
+                  <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1">Billed To</p>
+                  <p className="font-black text-2xl uppercase">{residentName}</p>
+                  <p className="font-bold text-neutral-600 mt-1 uppercase tracking-widest text-xs">Unit {selectedUnit}</p>
                 </div>
               </div>
 
-              <table className="w-full text-left border-collapse mb-8">
+              <table className="w-full text-left border-collapse mb-12">
                 <thead>
-                  <tr className="border-b-2 border-slate-900 text-sm uppercase tracking-wider text-slate-600">
-                    <th className="py-3 font-bold">Description</th>
-                    <th className="py-3 font-bold text-right">Amount</th>
+                  <tr className="border-b-2 border-black text-[10px] uppercase tracking-widest text-neutral-500">
+                    <th className="py-4 font-bold">Description</th>
+                    <th className="py-4 font-bold text-right">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {invoiceItems.map((item, idx) => (
-                    <tr key={idx} className="border-b border-slate-200">
-                      <td className="py-4 font-bold text-slate-800">{item.description}</td>
-                      <td className="py-4 font-extrabold text-slate-900 text-right">RM {item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <tr key={idx} className="border-b border-neutral-200">
+                      <td className="py-6 font-bold text-black uppercase text-sm">{item.description}</td>
+                      <td className="py-6 font-black text-right">RM {item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t-4 border-slate-900">
-                    <td className="py-6 font-extrabold text-xl text-right uppercase tracking-widest text-slate-900">Total Due:</td>
-                    <td className="py-6 font-extrabold text-2xl text-rose-600 text-right">RM {userStats.outstandingAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                  <tr className="border-t-4 border-black">
+                    <td className="py-8 font-black text-xl text-right uppercase tracking-tighter">Total Due:</td>
+                    <td className="py-8 font-black text-3xl text-red-600 text-right tracking-tighter">RM {userStats.outstandingAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                   </tr>
                 </tfoot>
               </table>
 
-              <div className="text-center text-sm font-bold text-slate-500 print:hidden mt-8 mb-6">
+              <div className="text-center text-[10px] font-bold text-neutral-400 uppercase tracking-widest print:hidden mt-8 mb-6">
                 Please make payment to the Management Office via Walk-In or Online Transfer.
               </div>
 
               <div className="flex justify-center gap-4 print:hidden">
-                <button onClick={() => setShowInvoice(false)} className="px-6 py-3 bg-white text-slate-800 border-2 border-slate-300 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-sm">
+                <button onClick={() => setShowInvoice(false)} className="px-8 py-4 bg-transparent text-black border-2 border-black font-bold uppercase tracking-widest text-xs hover:bg-neutral-100 transition-colors">
                   Close
                 </button>
-                <button onClick={() => window.print()} className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-colors shadow-md flex items-center gap-2">
-                  🖨️ Print Invoice
+                <button onClick={() => window.print()} className="px-8 py-4 bg-black text-white font-bold uppercase tracking-widest text-xs hover:bg-neutral-800 transition-colors">
+                  Print Invoice
                 </button>
               </div>
             </div>

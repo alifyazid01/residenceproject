@@ -17,7 +17,6 @@ export default function NavBar() {
       const { data: { session } } = await supabase.auth.getSession();
       const currentRole = session ? (session.user.user_metadata?.role || 'user') : 'user';
       setRole(currentRole);
-      
       checkUnreadNotifications(currentRole);
     };
     
@@ -43,20 +42,12 @@ export default function NavBar() {
 
   const checkUnreadNotifications = async (currentRole: string) => {
     const lastReadAnn = localStorage.getItem('last_read_announcements') || '2000-01-01T00:00:00.000Z';
-    const { count: annCount } = await supabase
-      .from('announcements')
-      .select('*', { count: 'exact', head: true })
-      .gt('created_at', lastReadAnn);
-      
+    const { count: annCount } = await supabase.from('announcements').select('*', { count: 'exact', head: true }).gt('created_at', lastReadAnn);
     setUnreadAnnouncements(annCount || 0);
 
     if (currentRole === 'admin') {
       const lastReadComp = localStorage.getItem('last_read_complaints') || '2000-01-01T00:00:00.000Z';
-      const { count: compCount } = await supabase
-        .from('complaints')
-        .select('*', { count: 'exact', head: true })
-        .gt('created_at', lastReadComp);
-        
+      const { count: compCount } = await supabase.from('complaints').select('*', { count: 'exact', head: true }).gt('created_at', lastReadComp);
       setUnreadComplaints(compCount || 0);
     }
   };
@@ -67,134 +58,86 @@ export default function NavBar() {
     navigate('/welcome');
   };
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-
   const hideNavBarPaths = ['/welcome', '/login', '/forgot-password', '/update-password'];
-
-  if (hideNavBarPaths.includes(location.pathname)) {
-    return null;
-  }
+  if (hideNavBarPaths.includes(location.pathname)) return null;
 
   const adminUnreadTotal = unreadAnnouncements + unreadComplaints;
   const userUnreadTotal = unreadAnnouncements;
 
   return (
-    <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-black text-white sticky top-0 z-50 border-b border-neutral-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           
-          {/* Logo */}
-          <div className="flex-shrink-0 font-bold text-xl tracking-tight text-blue-400">
-            ResidenceSystem
+          <div className="flex-shrink-0 font-black text-2xl uppercase tracking-tighter">
+            KEKWA RESIDENCE
           </div>
           
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-8">
             {role === 'admin' && (
               <>
-                <Link to="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Admin Dashboard</Link>
-                <Link to="/outstanding" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Total Outstanding</Link>
-                <Link to="/bills" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Bills</Link>
-                <Link to="/expenses" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Money Out</Link>
-                <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Contacts Edit</Link>
-                <Link to="/audit" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Audit Export</Link>
-                <Link to="/announcements" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <Link to="/dashboard" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Overview</Link>
+                <Link to="/outstanding" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Ledger</Link>
+                <Link to="/bills" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Billing</Link>
+                <Link to="/expenses" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Expenses</Link>
+                <Link to="/contacts" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Directory</Link>
+                <Link to="/audit" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Audit</Link>
+                <Link to="/announcements" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors flex items-center gap-2">
                   Notice Board
-                  {adminUnreadTotal > 0 && (
-                    <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shadow-sm animate-pulse">{adminUnreadTotal}</span>
-                  )}
+                  {adminUnreadTotal > 0 && <span className="bg-white text-black px-1.5 py-0.5 text-[9px]">{adminUnreadTotal}</span>}
                 </Link>
               </>
             )}
-
             {role === 'user' && (
               <>
-                <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Outstanding</Link>
-                <Link to="/announcements" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5">
-                  Notice Board & Reports
-                  {userUnreadTotal > 0 && (
-                    <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shadow-sm animate-pulse">{userUnreadTotal}</span>
-                  )}
+                <Link to="/" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Outstanding</Link>
+                <Link to="/announcements" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors flex items-center gap-2">
+                  Notice Board
+                  {userUnreadTotal > 0 && <span className="bg-white text-black px-1.5 py-0.5 text-[9px]">{userUnreadTotal}</span>}
                 </Link>
-                <Link to="/contacts" className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">JMB / Clerk Contacts</Link>
+                <Link to="/contacts" className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Directory</Link>
               </>
             )}
           </div>
 
-          {/* Desktop Auth Buttons */}
           <div className="hidden md:block">
             {role === 'admin' ? (
-              <button onClick={handleLogout} className="ml-4 px-4 py-2 rounded-md text-sm font-bold bg-rose-600 text-white hover:bg-rose-500 transition-colors">Logout</button>
+              <button onClick={handleLogout} className="text-[11px] font-bold uppercase tracking-widest border border-neutral-700 px-6 py-2 hover:bg-white hover:text-black transition-colors">Logout</button>
             ) : (
-              <Link to="/welcome" className="ml-4 px-4 py-2 rounded-md text-sm font-bold bg-slate-700 text-white hover:bg-slate-600 transition-colors">Switch User</Link>
+              <Link to="/welcome" className="text-[11px] font-bold uppercase tracking-widest border border-neutral-700 px-6 py-2 hover:bg-white hover:text-black transition-colors">Switch User</Link>
             )}
           </div>
 
-          {/* Mobile Menu Toggle Button */}
+          {/* Mobile Menu Toggle */}
           <div className="md:hidden flex items-center">
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-slate-300 hover:text-white focus:outline-none p-2"
-            >
-              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {isMobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white p-2">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {isMobileMenuOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
               </svg>
             </button>
           </div>
-
         </div>
       </div>
 
-      {/* Mobile Navigation Dropdown */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-slate-800 border-t border-slate-700 shadow-xl absolute w-full">
-          <div className="px-4 pt-2 pb-6 space-y-2 flex flex-col">
-            
-            {role === 'admin' && (
+        <div className="md:hidden bg-black border-t border-neutral-800 w-full px-4 py-6 space-y-4">
+           {role === 'admin' && (
               <>
-                <Link onClick={closeMobileMenu} to="/dashboard" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Admin Dashboard</Link>
-                <Link onClick={closeMobileMenu} to="/outstanding" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Total Outstanding</Link>
-                <Link onClick={closeMobileMenu} to="/bills" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Bills</Link>
-                <Link onClick={closeMobileMenu} to="/expenses" className="px-3 py-2 rounded-md text-sm font-medium text-rose-300 hover:text-white hover:bg-slate-700">Money Out</Link>
-                <Link onClick={closeMobileMenu} to="/contacts" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Contacts Edit</Link>
-                <Link onClick={closeMobileMenu} to="/audit" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Audit Export</Link>
-                <Link onClick={closeMobileMenu} to="/announcements" className="flex items-center justify-between px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">
-                  Notice Board
-                  {adminUnreadTotal > 0 && (
-                    <span className="bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded-full">{adminUnreadTotal} New</span>
-                  )}
-                </Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} to="/dashboard" className="block text-sm font-bold uppercase tracking-widest text-white">Overview</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} to="/outstanding" className="block text-sm font-bold uppercase tracking-widest text-white">Ledger</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} to="/bills" className="block text-sm font-bold uppercase tracking-widest text-white">Billing</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} to="/expenses" className="block text-sm font-bold uppercase tracking-widest text-white">Expenses</Link>
               </>
             )}
-
-            {role === 'user' && (
-              <>
-                <Link onClick={closeMobileMenu} to="/" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">Outstanding</Link>
-                <Link onClick={closeMobileMenu} to="/announcements" className="flex items-center justify-between px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">
-                  Notice Board & Reports
-                  {userUnreadTotal > 0 && (
-                    <span className="bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded-full">{userUnreadTotal} New</span>
-                  )}
-                </Link>
-                <Link onClick={closeMobileMenu} to="/contacts" className="block px-3 py-3 rounded-md text-base font-bold text-slate-300 hover:text-white hover:bg-slate-700">JMB / Clerk Contacts</Link>
-              </>
-            )}
-
-            <div className="pt-4 mt-2 border-t border-slate-700">
-              {role === 'admin' ? (
-                <button onClick={handleLogout} className="w-full text-left px-3 py-3 rounded-md text-base font-bold text-rose-400 hover:text-white hover:bg-rose-600 transition-colors">Logout Admin</button>
+            {/* Added a solid logout block for mobile */}
+            <div className="pt-6 border-t border-neutral-800">
+               {role === 'admin' ? (
+                <button onClick={handleLogout} className="text-sm font-bold uppercase tracking-widest text-neutral-400">Logout</button>
               ) : (
-                <Link onClick={closeMobileMenu} to="/welcome" className="block px-3 py-3 rounded-md text-base font-bold text-blue-400 hover:text-white hover:bg-blue-600 transition-colors">Switch User / Admin Login</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} to="/welcome" className="text-sm font-bold uppercase tracking-widest text-neutral-400">Switch User</Link>
               )}
             </div>
-
-          </div>
         </div>
       )}
     </nav>

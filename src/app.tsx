@@ -6,7 +6,6 @@ import Bills from './pages/bills';
 import NavBar from './components/NavBar';  
 import ProtectedRoute from './components/ProtectedRoute';
 import Contacts from './pages/contacts';
-import UpdatePassword from './pages/update-password';
 import Landing from './pages/landing';
 import OutstandingLedger from './pages/OutstandingLedger';
 import AuditExport from './pages/AuditExport';
@@ -21,9 +20,7 @@ function App() {
       <Routes>
         {/* === PUBLIC ROUTES (No Login Required) === */}
         <Route path="/welcome" element={<Landing />} />
-        <Route path="/login" element={<Login />} /> 
-        <Route path="/update-password" element={<UpdatePassword />} />
-        
+        <Route path="/login" element={<Login />} />   
         {/* === USER ROUTES (Anonymous Access) === */}
         <Route path="/" element={<Home />} /> 
         <Route path="/contacts" element={<Contacts />} />
