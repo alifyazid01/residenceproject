@@ -134,6 +134,7 @@ export default function Contacts() {
                     <option value="Management">Management</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Emergency">Emergency</option>
+                    <option value="JMB Committee">JMB Committee</option>
                   </select>
                 </div>
 
